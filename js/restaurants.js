@@ -259,6 +259,12 @@ deleteRestaurantBtn.textContent = '삭제';
 // ===== 모달 닫기 =====
 function closeRestaurantModal() {
     restaurantModal.classList.add('hidden');
+
+    // 모달 닫을 때도 버튼 상태 초기화
+saveRestaurantBtn.disabled = false;
+saveRestaurantBtn.textContent = '저장';
+deleteRestaurantBtn.disabled = false;
+deleteRestaurantBtn.textContent = '삭제';
 }
 
 modalClose.addEventListener('click', closeRestaurantModal);
