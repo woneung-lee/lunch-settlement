@@ -13,6 +13,14 @@ const rouletteContainer = document.getElementById('roulette-container');
 const emptyState = document.getElementById('empty-state');
 const goRestaurantsBtn = document.getElementById('go-restaurants-btn');
 
+// 하단 네비게이션
+const navHome = document.getElementById('nav-home');
+const navMembers = document.getElementById('nav-members');
+const navRestaurants = document.getElementById('nav-restaurants');
+const navRoulette = document.getElementById('nav-roulette');
+const navStats = document.getElementById('nav-stats');
+const navSettings = document.getElementById('nav-settings');
+
 // 룰렛 요소
 const rouletteWheel = document.getElementById('roulette-wheel');
 const rouletteCanvas = document.getElementById('roulette-canvas');
@@ -42,6 +50,28 @@ if (!groupId) {
     alert('그룹 정보가 없습니다.');
     window.location.href = 'groups.html';
 }
+
+if (navHome) navHome.addEventListener('click', (e) => {
+    e.preventDefault();
+    window.location.href = `home.html?groupId=${groupId}`;
+});
+if (navMembers) navMembers.addEventListener('click', (e) => {
+    e.preventDefault();
+    window.location.href = `members.html?groupId=${groupId}`;
+});
+if (navRestaurants) navRestaurants.addEventListener('click', (e) => {
+    e.preventDefault();
+    window.location.href = `restaurants.html?groupId=${groupId}`;
+});
+if (navStats) navStats.addEventListener('click', (e) => {
+    e.preventDefault();
+    window.location.href = `stats.html?groupId=${groupId}`;
+});
+if (navSettings) navSettings.addEventListener('click', (e) => {
+    e.preventDefault();
+    window.location.href = `settings.html?groupId=${groupId}`;
+});
+if (navRoulette) navRoulette.addEventListener('click', (e) => e.preventDefault());
 
 // ===== 인증 상태 확인 =====
 auth.onAuthStateChanged(async (user) => {
