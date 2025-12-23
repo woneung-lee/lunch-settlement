@@ -360,12 +360,25 @@ function openMealModal(date) {
     selectedDateDisplay.textContent = formatDate(selectedDate);
     mealModal.classList.remove('hidden');
     hideError(mealError);
+
+    // 저장/삭제 버튼 상태 초기화(저장 중... 잔상 방지)
+saveMealBtn.disabled = false;
+saveMealBtn.textContent = '저장';
+deleteMealBtn.disabled = false;
+deleteMealBtn.textContent = '삭제';
+    
 }
 
 // ===== 모달 닫기 =====
 function closeMealModal() {
     mealModal.classList.add('hidden');
     resetMealForm();
+
+    // 모달 닫을 때도 버튼 상태 초기화
+saveMealBtn.disabled = false;
+saveMealBtn.textContent = '저장';
+deleteMealBtn.disabled = false;
+deleteMealBtn.textContent = '삭제';
 }
 
 modalClose.addEventListener('click', closeMealModal);
