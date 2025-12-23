@@ -18,7 +18,7 @@
                 <div class="header-center">
                     <h1 id="group-name-display">그룹 로딩 중...</h1>
                 </div>
-                <button class="btn-menu" id="menu-btn">⋮</button>
+                <div style="width: 36px;"></div>
             </div>
         </header>
 
@@ -52,6 +52,34 @@
         <button class="fab" id="fab-btn">
             <span class="fab-icon">+</span>
         </button>
+
+        <!-- 하단 네비게이션 -->
+        <nav class="bottom-nav">
+            <a href="#" class="nav-item active" id="nav-home">
+                <span class="nav-icon">📅</span>
+                <span class="nav-label">홈</span>
+            </a>
+            <a href="#" class="nav-item" id="nav-members">
+                <span class="nav-icon">👥</span>
+                <span class="nav-label">그룹원</span>
+            </a>
+            <a href="#" class="nav-item" id="nav-restaurants">
+                <span class="nav-icon">🍽️</span>
+                <span class="nav-label">음식점</span>
+            </a>
+            <a href="#" class="nav-item" id="nav-roulette">
+                <span class="nav-icon">🎰</span>
+                <span class="nav-label">룰렛</span>
+            </a>
+            <a href="#" class="nav-item" id="nav-stats">
+                <span class="nav-icon">📊</span>
+                <span class="nav-label">통계</span>
+            </a>
+            <a href="#" class="nav-item" id="nav-settings">
+                <span class="nav-icon">⚙️</span>
+                <span class="nav-label">설정</span>
+            </a>
+        </nav>
     </div>
 
     <!-- 식사 기록 입력 모달 -->
@@ -126,46 +154,6 @@
                 <button class="btn-secondary" id="cancel-btn">취소</button>
                 <button class="btn-danger hidden" id="delete-meal-btn">삭제</button>
                 <button class="btn-primary" id="save-meal-btn">저장</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 메뉴 모달 -->
-    <div class="modal hidden" id="menu-modal">
-        <div class="modal-overlay" id="menu-modal-overlay"></div>
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>메뉴</h2>
-                <button class="modal-close" id="menu-modal-close">×</button>
-            </div>
-            <div class="modal-body">
-                <div class="menu-list">
-                    <a href="#" class="menu-item" id="menu-members">
-                        <span class="menu-icon">👥</span>
-                        <span class="menu-text">그룹원 관리</span>
-                        <span class="menu-arrow">›</span>
-                    </a>
-                    <a href="#" class="menu-item" id="menu-restaurants">
-                        <span class="menu-icon">🍽️</span>
-                        <span class="menu-text">음식점 관리</span>
-                        <span class="menu-arrow">›</span>
-                    </a>
-                    <a href="#" class="menu-item" id="menu-roulette">
-                        <span class="menu-icon">🎰</span>
-                        <span class="menu-text">룰렛 (점심 추천)</span>
-                        <span class="menu-arrow">›</span>
-                    </a>
-                    <a href="#" class="menu-item" id="menu-stats">
-                        <span class="menu-icon">📊</span>
-                        <span class="menu-text">통계/정산</span>
-                        <span class="menu-arrow">›</span>
-                    </a>
-                    <a href="#" class="menu-item" id="menu-settings">
-                        <span class="menu-icon">⚙️</span>
-                        <span class="menu-text">설정</span>
-                        <span class="menu-arrow">›</span>
-                    </a>
-                </div>
             </div>
         </div>
     </div>
