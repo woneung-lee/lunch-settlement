@@ -372,6 +372,16 @@
     justify-content: flex-end;
 }
 
+/* ===== 모달 하단 버튼 폭(세로 글씨 방지) ===== */
+.modal-footer .btn-primary {
+    width: auto;      /* style.css의 width:100% 덮어쓰기 */
+    margin-top: 0;    /* style.css의 margin-top:8px 영향 제거(레이아웃 안정) */
+}
+
+.modal-footer button {
+    white-space: nowrap; /* '취소', '삭제'가 글자 단위로 줄바꿈되지 않도록 */
+}
+
 .btn-secondary {
     padding: 12px 24px;
     border: 2px solid var(--border);
