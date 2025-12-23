@@ -130,6 +130,46 @@
         </div>
     </div>
 
+    <!-- 메뉴 모달 -->
+    <div class="modal hidden" id="menu-modal">
+        <div class="modal-overlay" id="menu-modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>메뉴</h2>
+                <button class="modal-close" id="menu-modal-close">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="menu-list">
+                    <a href="#" class="menu-item" id="menu-members">
+                        <span class="menu-icon">👥</span>
+                        <span class="menu-text">그룹원 관리</span>
+                        <span class="menu-arrow">›</span>
+                    </a>
+                    <a href="#" class="menu-item" id="menu-restaurants">
+                        <span class="menu-icon">🍽️</span>
+                        <span class="menu-text">음식점 관리</span>
+                        <span class="menu-arrow">›</span>
+                    </a>
+                    <a href="#" class="menu-item" id="menu-roulette">
+                        <span class="menu-icon">🎰</span>
+                        <span class="menu-text">룰렛 (점심 추천)</span>
+                        <span class="menu-arrow">›</span>
+                    </a>
+                    <a href="#" class="menu-item" id="menu-stats">
+                        <span class="menu-icon">📊</span>
+                        <span class="menu-text">통계/정산</span>
+                        <span class="menu-arrow">›</span>
+                    </a>
+                    <a href="#" class="menu-item" id="menu-settings">
+                        <span class="menu-icon">⚙️</span>
+                        <span class="menu-text">설정</span>
+                        <span class="menu-arrow">›</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
