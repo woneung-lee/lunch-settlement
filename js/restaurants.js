@@ -344,8 +344,8 @@ saveRestaurantBtn.addEventListener('click', async () => {
                 .collection('restaurants').add(restaurantData);
         }
         
-        await loadRestaurants();
-        closeRestaurantModal();
+closeRestaurantModal();
+await loadRestaurants();
         
     } catch (error) {
         console.error('음식점 저장 오류:', error);
