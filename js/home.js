@@ -12,13 +12,19 @@ let mealsData = {};
 
 // ===== DOM 요소 =====
 const backBtn = document.getElementById('back-btn');
-const menuBtn = document.getElementById('menu-btn');
 const groupNameDisplay = document.getElementById('group-name-display');
 const currentMonthDisplay = document.getElementById('current-month');
 const prevMonthBtn = document.getElementById('prev-month-btn');
 const nextMonthBtn = document.getElementById('next-month-btn');
 const calendarDays = document.getElementById('calendar-days');
 const fabBtn = document.getElementById('fab-btn');
+
+// 하단 네비게이션 요소
+const navMembers = document.getElementById('nav-members');
+const navRestaurants = document.getElementById('nav-restaurants');
+const navRoulette = document.getElementById('nav-roulette');
+const navStats = document.getElementById('nav-stats');
+const navSettings = document.getElementById('nav-settings');
 
 // 모달 요소
 const mealModal = document.getElementById('meal-modal');
@@ -39,11 +45,6 @@ const mealError = document.getElementById('meal-error');
 const cancelBtn = document.getElementById('cancel-btn');
 const deleteMealBtn = document.getElementById('delete-meal-btn');
 const saveMealBtn = document.getElementById('save-meal-btn');
-
-// 메뉴 모달 요소
-const menuModal = document.getElementById('menu-modal');
-const menuModalOverlay = document.getElementById('menu-modal-overlay');
-const menuModalClose = document.getElementById('menu-modal-close');
 
 // ===== URL에서 groupId 가져오기 =====
 const urlParams = new URLSearchParams(window.location.search);
@@ -299,43 +300,30 @@ backBtn.addEventListener('click', () => {
     window.location.href = 'groups.html';
 });
 
-// ===== 메뉴 버튼 =====
-menuBtn.addEventListener('click', () => {
-    menuModal.classList.remove('hidden');
-});
-
-menuModalClose.addEventListener('click', () => {
-    menuModal.classList.add('hidden');
-});
-
-menuModalOverlay.addEventListener('click', () => {
-    menuModal.classList.add('hidden');
-});
-
-// 메뉴 아이템 클릭
-document.getElementById('menu-members').addEventListener('click', (e) => {
+// ===== 하단 네비게이션 =====
+navMembers.addEventListener('click', (e) => {
     e.preventDefault();
     window.location.href = `members.html?groupId=${groupId}`;
 });
 
-document.getElementById('menu-restaurants').addEventListener('click', (e) => {
+navRestaurants.addEventListener('click', (e) => {
     e.preventDefault();
     window.location.href = `restaurants.html?groupId=${groupId}`;
 });
 
-document.getElementById('menu-roulette').addEventListener('click', (e) => {
+navRoulette.addEventListener('click', (e) => {
     e.preventDefault();
     window.location.href = `roulette.html?groupId=${groupId}`;
 });
 
-document.getElementById('menu-stats').addEventListener('click', (e) => {
+navStats.addEventListener('click', (e) => {
     e.preventDefault();
-    alert('통계/정산 기능은 다음 단계에서 구현됩니다.');
+    window.location.href = `stats.html?groupId=${groupId}`;
 });
 
-document.getElementById('menu-settings').addEventListener('click', (e) => {
+navSettings.addEventListener('click', (e) => {
     e.preventDefault();
-    alert('설정 기능은 다음 단계에서 구현됩니다.');
+    window.location.href = `settings.html?groupId=${groupId}`;
 });
 
 // ===== 에러 메시지 표시/숨김 =====
@@ -754,4 +742,3 @@ deleteMealBtn.addEventListener('click', async () => {
         deleteMealBtn.textContent = '삭제';
     }
 });
-
