@@ -248,6 +248,12 @@ function openRestaurantModal(restaurantId = null) {
     restaurantNameInput.focus();
     hideError(nameError);
     hideError(restaurantError);
+
+    // 저장/삭제 버튼 상태 초기화(저장 중... 잔상 방지)
+saveRestaurantBtn.disabled = false;
+saveRestaurantBtn.textContent = '저장';
+deleteRestaurantBtn.disabled = false;
+deleteRestaurantBtn.textContent = '삭제';
 }
 
 // ===== 모달 닫기 =====
