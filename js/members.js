@@ -11,6 +11,14 @@ const membersContainer = document.getElementById('members-container');
 const membersList = document.getElementById('members-list');
 const fabBtn = document.getElementById('fab-btn');
 
+// 하단 네비게이션
+const navHome = document.getElementById('nav-home');
+const navMembers = document.getElementById('nav-members');
+const navRestaurants = document.getElementById('nav-restaurants');
+const navRoulette = document.getElementById('nav-roulette');
+const navStats = document.getElementById('nav-stats');
+const navSettings = document.getElementById('nav-settings');
+
 // 모달 요소
 const memberModal = document.getElementById('member-modal');
 const modalOverlay = document.getElementById('modal-overlay');
