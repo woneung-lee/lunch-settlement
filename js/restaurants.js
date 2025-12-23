@@ -39,6 +39,35 @@ if (!groupId) {
     window.location.href = 'groups.html';
 }
 
+// ===== 하단 네비게이션 링크 세팅(그룹ID 유지) =====
+(function setupBottomNav() {
+    const routes = {
+        'nav-home': `home.html?groupId=${groupId}`,
+        'nav-members': `members.html?groupId=${groupId}`,
+        'nav-restaurants': `restaurants.html?groupId=${groupId}`,
+        'nav-roulette': `roulette.html?groupId=${groupId}`,
+        'nav-stats': `stats.html?groupId=${groupId}`,
+        'nav-settings': `settings.html?groupId=${groupId}`,
+    };
+
+    Object.entries(routes).forEach(([id, url]) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+
+        // <a> 태그면 href를 세팅(가장 안정적)
+        if (el.tagName && el.tagName.toLowerCase() === 'a') {
+            el.setAttribute('href', url);
+            return;
+        }
+
+        // <button> 등이라면 클릭 이동
+        el.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.location.href = url;
+        });
+    });
+})();
+
 // ===== 인증 상태 확인 =====
 auth.onAuthStateChanged(async (user) => {
     if (!user) {
