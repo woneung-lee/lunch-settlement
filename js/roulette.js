@@ -337,10 +337,10 @@ startRouletteBtn.addEventListener('click', () => {
     // 애니메이션 적용
     rouletteCanvas.style.transform = `rotate(${totalRotation}deg)`;
     
-    // 4초 후 결과 표시
-    setTimeout(() => {
-        showResult(randomDegree);
-    }, 4000);
+// 4초 후 결과 표시
+setTimeout(() => {
+    showResult(totalRotation);
+}, 4000);
 });
 
 // ===== 결과 표시 =====
