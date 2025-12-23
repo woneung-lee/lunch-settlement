@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>내 그룹 - 점심 정산</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/groups.css">
+</head>
+<body>
+    <div class="page-container">
+        <!-- 헤더 -->
+        <header class="header">
+            <div class="header-content">
+                <div class="header-left">
+                    <div class="logo-icon-small">🍱</div>
+                    <h1>내 그룹</h1>
+                </div>
+                <button class="btn-logout" id="logout-btn">로그아웃</button>
+            </div>
+        </header>
+
+        <!-- 메인 컨텐츠 -->
+        <main class="main-content">
+            <!-- 로딩 상태 -->
+            <div class="loading-state" id="loading-state">
+                <div class="spinner"></div>
+                <p>그룹 목록을 불러오는 중...</p>
+            </div>
+
+            <!-- 빈 상태 -->
+            <div class="empty-state hidden" id="empty-state">
+                <div class="empty-icon">📦</div>
+                <h2>아직 그룹이 없어요</h2>
+                <p>새로운 그룹을 만들어 점심 정산을 시작해보세요!</p>
+                <button class="btn-primary" id="create-first-group-btn">
+                    첫 그룹 만들기
+                </button>
+            </div>
+
+            <!-- 그룹 목록 -->
+            <div class="groups-container hidden" id="groups-container">
+                <div class="groups-grid" id="groups-grid">
+                    <!-- 그룹 카드들이 동적으로 추가됨 -->
+                </div>
+            </div>
+        </main>
+
+        <!-- 플로팅 추가 버튼 -->
+        <button class="fab" id="fab-btn">
+            <span class="fab-icon">+</span>
+        </button>
+    </div>
+
+    <!-- 그룹 생성 모달 -->
+    <div class="modal hidden" id="create-group-modal">
+        <div class="modal-overlay" id="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>새 그룹 만들기</h2>
+                <button class="modal-close" id="modal-close">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="group-name">그룹 이름</label>
+                    <input 
+                        type="text" 
+                        id="group-name" 
+                        placeholder="예) 개발팀, 마케팅팀, 친구들"
+                        maxlength="30"
+                    >
+                    <div class="input-hint">최대 30자</div>
+                    <div class="error-message" id="group-name-error"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancel-btn">취소</button>
+                <button class="btn-primary" id="create-group-btn">만들기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <!-- 앱 스크립트 -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/groups.js"></script>
+</body>
+</html>

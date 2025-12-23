@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>캘린더 - 점심 정산</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="auth-box">
+            <div class="logo-section">
+                <div class="logo-icon">📅</div>
+                <h1>캘린더 홈</h1>
+                <p class="subtitle" id="group-name-display">그룹을 불러오는 중...</p>
+            </div>
+            <div style="text-align: center; padding: 40px 20px;">
+                <p style="color: var(--text-medium); margin-bottom: 20px;">
+                    3단계에서 캘린더 기능이 추가될 예정입니다.
+                </p>
+                <button class="btn-primary" onclick="window.location.href='groups.html'">
+                    그룹 목록으로 돌아가기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <script src="js/firebase-config.js"></script>
+    <script>
+        // URL에서 groupId 가져오기
+        const urlParams = new URLSearchParams(window.location.search);
+        const groupId = urlParams.get('groupId');
+        
+        if (!groupId) {
+            alert('그룹 정보가 없습니다.');
+            window.location.href = 'groups.html';
+        }
+        
+        // 인증 확인 및 그룹명 표시
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            try {
+                const groupDoc = await db.collection('groups').doc(groupId).get();
+                if (groupDoc.exists) {
+                    const groupName = groupDoc.data().groupName;
+                    document.getElementById('group-name-display').textContent = groupName;
+                    document.title = `${groupName} - 점심 정산`;
+                } else {
+                    alert('그룹을 찾을 수 없습니다.');
+                    window.location.href = 'groups.html';
+                }
+            } catch (error) {
+                console.error('그룹 로드 오류:', error);
+                alert('그룹 정보를 불러오는 중 오류가 발생했습니다.');
+                window.location.href = 'groups.html';
+            }
+        });
+    </script>
+</body>
+</html>
