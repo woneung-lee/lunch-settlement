@@ -350,3 +350,8 @@ body {
 .nav-item.active .nav-label {
     color: var(--primary);
 }
+
+/* ===== 하단 네비게이션 고정으로 인한 가림 방지(전 화면 공통) ===== */
+.page-container {
+    padding-bottom: calc(120px + env(safe-area-inset-bottom));
+}
