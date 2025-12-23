@@ -18,70 +18,75 @@
     margin: 0 auto;
     padding: 16px 20px;
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
+}
+
+.btn-back {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    border: none;
+    background: var(--bg-main);
+    color: var(--text-dark);
+    font-size: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-back:hover {
+    transform: translateX(-2px);
+    box-shadow: var(--shadow-sm);
 }
 
 .header-center {
     flex: 1;
     text-align: center;
+    padding: 0 16px;
 }
 
-.header h1 {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--text-dark);
-}
-
-.btn-back {
-    width: 36px;
-    height: 36px;
-    border: none;
-    background: transparent;
-    color: var(--text-dark);
+.header-center h1 {
     font-size: 20px;
-    cursor: pointer;
-    border-radius: var(--radius-sm);
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    font-weight: 800;
+    color: var(--text-dark);
+    margin: 0;
 }
 
-.btn-back:hover {
-    background: var(--bg-main);
+.header-center p {
+    font-size: 13px;
+    color: var(--text-medium);
+    margin: 4px 0 0 0;
 }
 
-/* ===== 메인 컨텐츠 ===== */
+/* ===== 메인 ===== */
 .main-content {
-    max-width: 800px;
+    max-width: 1200px;
     margin: 0 auto;
-    padding: 24px 20px 60px;
+    padding: 20px 20px 80px;
 }
 
 /* ===== 로딩 상태 ===== */
 .loading-state {
-    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     padding: 80px 20px;
 }
 
 .spinner {
-    width: 48px;
-    height: 48px;
-    border: 4px solid var(--border);
-    border-top-color: var(--primary);
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--bg-main);
+    border-top: 4px solid var(--primary);
     border-radius: 50%;
-    margin: 0 auto 20px;
     animation: spin 1s linear infinite;
+    margin-bottom: 16px;
 }
 
 @keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-.loading-state p {
-    color: var(--text-medium);
-    font-size: 15px;
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 /* ===== 빈 상태 ===== */
@@ -91,13 +96,13 @@
 }
 
 .empty-icon {
-    font-size: 80px;
-    margin-bottom: 24px;
-    opacity: 0.8;
+    font-size: 64px;
+    margin-bottom: 20px;
 }
 
 .empty-state h2 {
-    font-size: 24px;
+    font-size: 20px;
+    font-weight: 800;
     color: var(--text-dark);
     margin-bottom: 12px;
 }
@@ -112,119 +117,29 @@
 .roulette-container {
     display: flex;
     flex-direction: column;
-    gap: 32px;
+    gap: 28px;
 }
 
-/* ===== 룰렛 휠 ===== */
-.roulette-wheel-container {
-    position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 40px 20px;
-}
-
-.roulette-wheel {
-    width: 320px;
-    height: 320px;
-    position: relative;
-}
-
-#roulette-canvas {
-    width: 100%;
-    height: 100%;
-    transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99);
-}
-
-.roulette-pointer {
-    position: absolute;
-    top: -10px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 40px;
-    color: var(--accent);
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
-    z-index: 10;
-}
-
-/* ===== 결과 표시 ===== */
-.result-container {
-    text-align: center;
-    padding: 40px 20px;
-    background: var(--bg-white);
-    border-radius: var(--radius-xl);
-    box-shadow: var(--shadow-lg);
-    animation: scaleUp 0.5s ease-out;
-}
-
-@keyframes scaleUp {
-    from {
-        opacity: 0;
-        transform: scale(0.8);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
-}
-
-.result-icon {
-    font-size: 80px;
-    margin-bottom: 16px;
-    animation: bounce 1s ease-in-out infinite;
-}
-
-@keyframes bounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-20px); }
-}
-
-.result-container h2 {
-    font-size: 20px;
-    color: var(--text-medium);
-    margin-bottom: 16px;
-}
-
-.result-restaurant {
-    font-size: 36px;
-    font-weight: 700;
-    color: var(--primary);
-    margin-bottom: 12px;
-}
-
-.result-category {
-    display: inline-block;
-    padding: 8px 16px;
-    background: var(--bg-main);
-    color: var(--text-dark);
-    font-size: 16px;
-    font-weight: 600;
-    border-radius: var(--radius-md);
-    margin-bottom: 24px;
-}
-
-#start-again-btn {
-    margin-top: 8px;
-}
-
-/* ===== 음식점 선택 ===== */
+/* ===== 후보 선택(상단) ===== */
 .selection-container {
     background: var(--bg-white);
     border-radius: var(--radius-xl);
-    padding: 24px;
     box-shadow: var(--shadow-md);
+    padding: 20px;
 }
 
 .selection-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    gap: 12px;
+    margin-bottom: 14px;
 }
 
 .selection-header h3 {
-    font-size: 18px;
-    font-weight: 700;
+    margin: 0;
+    font-size: 16px;
+    font-weight: 800;
     color: var(--text-dark);
 }
 
@@ -233,174 +148,257 @@
     gap: 8px;
 }
 
-.btn-select-all, .btn-deselect-all {
-    padding: 6px 12px;
+.btn-select-all,
+.btn-deselect-all {
+    padding: 8px 12px;
+    border-radius: 10px;
     border: 1px solid var(--border);
     background: var(--bg-white);
     color: var(--text-dark);
-    font-size: 13px;
-    font-weight: 600;
-    border-radius: var(--radius-sm);
     cursor: pointer;
-    transition: all 0.2s ease;
+    font-weight: 700;
+    font-size: 12px;
 }
 
-.btn-select-all:hover {
-    border-color: var(--primary);
-    color: var(--primary);
-}
-
+.btn-select-all:hover,
 .btn-deselect-all:hover {
-    border-color: var(--error);
-    color: var(--error);
+    background: var(--bg-main);
 }
 
-/* ===== 필터 컨테이너 ===== */
+/* ===== 필터 ===== */
 .filter-container {
     display: flex;
+    flex-wrap: wrap;
     gap: 8px;
-    margin-bottom: 20px;
-    overflow-x: auto;
-    padding-bottom: 8px;
+    margin-bottom: 14px;
 }
 
 .filter-btn {
-    padding: 8px 16px;
-    border: 2px solid var(--border);
+    padding: 8px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
     background: var(--bg-white);
-    color: var(--text-dark);
-    font-size: 14px;
-    font-weight: 600;
-    border-radius: var(--radius-md);
+    color: var(--text-medium);
     cursor: pointer;
+    font-weight: 800;
+    font-size: 12px;
     transition: all 0.2s ease;
-    white-space: nowrap;
 }
 
 .filter-btn:hover {
-    border-color: var(--primary-light);
+    background: var(--bg-main);
 }
 
 .filter-btn.active {
-    border-color: var(--primary);
     background: var(--primary);
+    border-color: var(--primary);
     color: white;
 }
 
-/* ===== 음식점 체크리스트 ===== */
+/* ===== 체크리스트 ===== */
 .restaurants-checklist {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 12px;
-    margin-bottom: 24px;
-    max-height: 400px;
-    overflow-y: auto;
-    padding: 4px;
+    max-height: 320px;
+    overflow: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 10px;
+    background: var(--bg-white);
+    margin-bottom: 14px;
 }
 
-.restaurant-checkbox-item {
+.check-item {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 12px;
-    border: 2px solid var(--border);
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    background: var(--bg-white);
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 10px;
+    border-radius: 12px;
 }
 
-.restaurant-checkbox-item:hover {
-    border-color: var(--primary-light);
-    background: #E8F0FE;
+.check-item:hover {
+    background: var(--bg-main);
 }
 
-.restaurant-checkbox-item.checked {
-    border-color: var(--primary);
-    background: #E8F0FE;
+.check-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
 }
 
-.restaurant-checkbox-item input[type="checkbox"] {
-    width: 20px;
-    height: 20px;
-    cursor: pointer;
-    accent-color: var(--primary);
+.check-left input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
 }
 
-.restaurant-checkbox-label {
-    flex: 1;
-    cursor: pointer;
-}
-
-.restaurant-checkbox-name {
-    font-size: 15px;
-    font-weight: 600;
+.check-name {
+    font-weight: 800;
     color: var(--text-dark);
-    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 520px;
 }
 
-.restaurant-checkbox-category {
+.check-category {
     font-size: 12px;
+    font-weight: 800;
     color: var(--text-medium);
+    background: var(--bg-main);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 6px 10px;
+    white-space: nowrap;
 }
 
-/* ===== 룰렛 시작 버튼 ===== */
+/* ===== 시작 버튼 ===== */
 .btn-start-roulette {
     width: 100%;
-    padding: 18px;
+    padding: 14px 16px;
+    border-radius: var(--radius-lg);
     border: none;
-    border-radius: var(--radius-md);
-    background: linear-gradient(135deg, var(--accent) 0%, #FFB347 100%);
+    background: var(--primary);
     color: white;
-    font-size: 18px;
-    font-weight: 700;
+    font-weight: 900;
+    font-size: 15px;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: var(--shadow-md);
-}
-
-.btn-start-roulette:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
-}
-
-.btn-start-roulette:active:not(:disabled) {
-    transform: translateY(0);
+    transition: all 0.2s ease;
 }
 
 .btn-start-roulette:disabled {
-    opacity: 0.5;
+    background: #cfd7e6;
     cursor: not-allowed;
-    transform: none;
+}
+
+.btn-start-roulette:not(:disabled):hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+/* ===== 룰렛 휠 ===== */
+.roulette-wheel-container {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 18px 10px 30px;
+}
+
+.roulette-wheel {
+    width: 320px;
+    height: 320px;
+    border-radius: 50%;
+    background: white;
+    box-shadow: var(--shadow-lg);
+    border: 6px solid #ffffff;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    /* 회전 애니메이션은 JS에서 부여 */
+    transform: rotate(0deg);
+    transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99);
+}
+
+#roulette-canvas {
+    width: 320px;
+    height: 320px;
+    display: block;
+}
+
+.roulette-pointer {
+    position: absolute;
+    top: 6px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 40px;
+    color: var(--accent);
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+    z-index: 10;
+}
+
+/* ===== 결과 팝업(모달) ===== */
+.result-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 18px;
+    z-index: 350; /* 네비게이션 등보다 위 */
+}
+
+.result-modal {
+    position: relative;
+    width: min(420px, 92vw);
+}
+
+.result-modal-close {
+    position: absolute;
+    top: -12px;
+    right: -12px;
+    width: 40px;
+    height: 40px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--bg-white);
+    box-shadow: var(--shadow-md);
+    cursor: pointer;
+    font-size: 22px;
+    line-height: 1;
+    color: var(--text-dark);
+}
+
+.result-container {
+    text-align: center;
+    padding: 28px 22px;
+    background: var(--bg-white);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-xl);
+}
+
+.result-icon {
+    font-size: 54px;
+    margin-bottom: 10px;
+}
+
+.result-container h2 {
+    font-size: 18px;
+    font-weight: 900;
+    margin: 0 0 14px 0;
+    color: var(--text-dark);
+}
+
+.result-restaurant {
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--primary);
+    margin-bottom: 8px;
+    word-break: keep-all;
+}
+
+.result-category {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--text-medium);
+    margin-bottom: 16px;
+}
+
+.result-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
 }
 
 /* ===== 반응형 ===== */
-@media (max-width: 768px) {
-    .roulette-wheel {
+@media (max-width: 420px) {
+    .roulette-wheel,
+    #roulette-canvas {
         width: 280px;
         height: 280px;
     }
-    
-    .restaurants-checklist {
-        grid-template-columns: 1fr;
-    }
+    .check-name { max-width: 220px; }
 }
 
-@media (max-width: 480px) {
-.main-content {
-    padding: 24px 20px 100px;
-}
-    
-    .roulette-wheel {
-        width: 240px;
-        height: 240px;
-    }
-    
-    .result-restaurant {
-        font-size: 28px;
-    }
-    
-    .selection-container {
-        padding: 16px;
-    }
-}
