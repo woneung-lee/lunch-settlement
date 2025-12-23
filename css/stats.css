@@ -1,0 +1,412 @@
+/* ===== 페이지 레이아웃 ===== */
+.page-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #E8F0FE 0%, #F5F7FA 50%, #FFFFFF 100%);
+}
+
+/* ===== 헤더 ===== */
+.header {
+    background: var(--bg-white);
+    box-shadow: var(--shadow-sm);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-center {
+    flex: 1;
+    text-align: center;
+}
+
+.header h1 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.btn-back {
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: transparent;
+    color: var(--text-dark);
+    font-size: 20px;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-back:hover {
+    background: var(--bg-main);
+}
+
+/* ===== 메인 컨텐츠 ===== */
+.main-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px 20px 60px;
+}
+
+/* ===== 기간 선택 ===== */
+.period-selector {
+    background: var(--bg-white);
+    border-radius: var(--radius-xl);
+    padding: 24px;
+    box-shadow: var(--shadow-md);
+    margin-bottom: 24px;
+}
+
+.period-selector h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 16px;
+}
+
+.period-inputs {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.period-input-group {
+    flex: 1;
+}
+
+.period-input-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 8px;
+}
+
+.period-input-group input[type="date"] {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-md);
+    font-size: 15px;
+    transition: all 0.3s ease;
+}
+
+.period-input-group input[type="date"]:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(0, 102, 204, 0.1);
+}
+
+.period-separator {
+    font-size: 18px;
+    color: var(--text-medium);
+    margin-top: 28px;
+}
+
+.period-presets {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.preset-btn {
+    padding: 8px 16px;
+    border: 2px solid var(--border);
+    background: var(--bg-white);
+    color: var(--text-dark);
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.preset-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+/* ===== 로딩 상태 ===== */
+.loading-state {
+    text-align: center;
+    padding: 80px 20px;
+}
+
+.spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid var(--border);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    margin: 0 auto 20px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.loading-state p {
+    color: var(--text-medium);
+    font-size: 15px;
+}
+
+/* ===== 빈 상태 ===== */
+.empty-state {
+    text-align: center;
+    padding: 80px 20px;
+}
+
+.empty-icon {
+    font-size: 80px;
+    margin-bottom: 24px;
+    opacity: 0.8;
+}
+
+.empty-state h2 {
+    font-size: 24px;
+    color: var(--text-dark);
+    margin-bottom: 12px;
+}
+
+.empty-state p {
+    color: var(--text-medium);
+    font-size: 15px;
+}
+
+/* ===== 요약 카드 ===== */
+.summary-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.summary-card {
+    background: var(--bg-white);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border-left: 4px solid var(--primary);
+}
+
+.summary-icon {
+    font-size: 40px;
+}
+
+.summary-content {
+    flex: 1;
+}
+
+.summary-label {
+    font-size: 13px;
+    color: var(--text-medium);
+    margin-bottom: 4px;
+}
+
+.summary-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+/* ===== 통계 섹션 ===== */
+.stats-section {
+    background: var(--bg-white);
+    border-radius: var(--radius-xl);
+    padding: 24px;
+    box-shadow: var(--shadow-md);
+    margin-bottom: 24px;
+}
+
+.section-header {
+    margin-bottom: 20px;
+}
+
+.section-header h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+/* ===== 통계 테이블 ===== */
+.stats-table-container {
+    overflow-x: auto;
+}
+
+.stats-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.stats-table thead {
+    background: var(--bg-main);
+}
+
+.stats-table th {
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-dark);
+    border-bottom: 2px solid var(--border);
+}
+
+.stats-table td {
+    padding: 12px 16px;
+    font-size: 15px;
+    color: var(--text-dark);
+    border-bottom: 1px solid var(--border);
+}
+
+.stats-table tbody tr:hover {
+    background: var(--bg-main);
+}
+
+.stats-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* 순위 */
+.rank {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: var(--bg-main);
+    border-radius: 50%;
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.rank.rank-1 {
+    background: #FFD700;
+    color: white;
+}
+
+.rank.rank-2 {
+    background: #C0C0C0;
+    color: white;
+}
+
+.rank.rank-3 {
+    background: #CD7F32;
+    color: white;
+}
+
+/* 금액 */
+.amount {
+    font-weight: 700;
+    color: var(--primary);
+}
+
+/* 비율 */
+.percentage {
+    color: var(--text-medium);
+    font-size: 13px;
+}
+
+/* 카테고리 배지 */
+.category-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    background: var(--bg-main);
+    color: var(--text-dark);
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+}
+
+/* ===== 내보내기 버튼 ===== */
+.export-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 32px;
+}
+
+.btn-export {
+    padding: 14px 28px;
+    border: 2px solid var(--primary);
+    background: var(--bg-white);
+    color: var(--primary);
+    font-size: 16px;
+    font-weight: 700;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-export:hover {
+    background: var(--primary);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-export:active {
+    transform: translateY(0);
+}
+
+/* ===== 반응형 ===== */
+@media (max-width: 768px) {
+    .period-inputs {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .period-separator {
+        text-align: center;
+        margin: 0;
+    }
+    
+    .period-presets {
+        flex-wrap: wrap;
+    }
+    
+    .summary-cards {
+        grid-template-columns: 1fr;
+    }
+    
+    .export-buttons {
+        flex-direction: column;
+    }
+    
+    .btn-export {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-content {
+        padding: 16px 12px 40px;
+    }
+    
+    .period-selector,
+    .stats-section {
+        padding: 16px;
+    }
+    
+    .stats-table th,
+    .stats-table td {
+        padding: 10px 12px;
+        font-size: 14px;
+    }
+}
