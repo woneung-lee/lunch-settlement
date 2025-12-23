@@ -269,6 +269,34 @@ body {
     display: none !important;
 }
 
+/* ===== 모달 하단 버튼(세로 글씨 방지) ===== */
+.modal-footer .btn-primary {
+    width: auto;   /* style.css의 .btn-primary width:100% 덮어쓰기 */
+    margin-top: 0; /* style.css의 .btn-primary margin-top 제거(모달 footer 정렬 안정) */
+}
+
+/* ===== 공통 보조 버튼(btn-secondary) ===== */
+.btn-secondary {
+    padding: 12px 24px;
+    border: 2px solid var(--border);
+    background: var(--bg-white);
+    color: var(--text-dark);
+    font-size: 15px;
+    font-weight: 600;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+    border-color: var(--text-medium);
+    background: var(--bg-main);
+}
+
+.modal-footer button {
+    white-space: nowrap; /* '취소', '삭제'가 글자 단위로 줄바꿈되지 않도록 */
+}
+
 /* ===== 하단 네비게이션 탭(공통) ===== */
 .bottom-nav {
     position: fixed;
