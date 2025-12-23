@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>그룹원 관리 - 점심 정산</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/manage.css">
+</head>
+<body>
+    <div class="page-container">
+        <!-- 헤더 -->
+        <header class="header">
+            <div class="header-content">
+                <button class="btn-back" id="back-btn">
+                    <span>←</span>
+                </button>
+                <div class="header-center">
+                    <h1>그룹원 관리</h1>
+                </div>
+                <div style="width: 36px;"></div>
+            </div>
+        </header>
+
+        <!-- 메인 컨텐츠 -->
+        <main class="main-content">
+            <!-- 로딩 상태 -->
+            <div class="loading-state" id="loading-state">
+                <div class="spinner"></div>
+                <p>그룹원 목록을 불러오는 중...</p>
+            </div>
+
+            <!-- 그룹원 목록 -->
+            <div class="members-container hidden" id="members-container">
+                <!-- 안내 메시지 -->
+                <div class="info-box">
+                    <p>💡 그룹원은 식사 기록 입력 시 자동으로 추가되지만, 여기서 미리 등록할 수도 있습니다.</p>
+                    <p>⭐ 자주 먹는 사람으로 표시하면 빠른 입력이 가능합니다.</p>
+                </div>
+
+                <!-- 그룹원 리스트 -->
+                <div class="members-list" id="members-list">
+                    <!-- 그룹원 카드들이 동적으로 추가됨 -->
+                </div>
+            </div>
+        </main>
+
+        <!-- 플로팅 추가 버튼 -->
+        <button class="fab" id="fab-btn">
+            <span class="fab-icon">+</span>
+        </button>
+    </div>
+
+    <!-- 그룹원 추가/수정 모달 -->
+    <div class="modal hidden" id="member-modal">
+        <div class="modal-overlay" id="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">그룹원 추가</h2>
+                <button class="modal-close" id="modal-close">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="member-name">이름</label>
+                    <input type="text" id="member-name" placeholder="이름을 입력하세요" maxlength="20">
+                    <div class="input-hint">최대 20자</div>
+                    <div class="error-message" id="name-error"></div>
+                </div>
+
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="is-frequent">
+                        <span>⭐ 자주 먹는 사람으로 표시</span>
+                    </label>
+                </div>
+
+                <div class="error-message" id="member-error"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancel-btn">취소</button>
+                <button class="btn-danger hidden" id="delete-member-btn">삭제</button>
+                <button class="btn-primary" id="save-member-btn">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <!-- 앱 스크립트 -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/members.js"></script>
+</body>
+</html>
