@@ -40,6 +40,11 @@ const cancelBtn = document.getElementById('cancel-btn');
 const deleteMealBtn = document.getElementById('delete-meal-btn');
 const saveMealBtn = document.getElementById('save-meal-btn');
 
+// 메뉴 모달 요소
+const menuModal = document.getElementById('menu-modal');
+const menuModalOverlay = document.getElementById('menu-modal-overlay');
+const menuModalClose = document.getElementById('menu-modal-close');
+
 // ===== URL에서 groupId 가져오기 =====
 const urlParams = new URLSearchParams(window.location.search);
 groupId = urlParams.get('groupId');
@@ -292,6 +297,45 @@ nextMonthBtn.addEventListener('click', async () => {
 // ===== 뒤로 가기 =====
 backBtn.addEventListener('click', () => {
     window.location.href = 'groups.html';
+});
+
+// ===== 메뉴 버튼 =====
+menuBtn.addEventListener('click', () => {
+    menuModal.classList.remove('hidden');
+});
+
+menuModalClose.addEventListener('click', () => {
+    menuModal.classList.add('hidden');
+});
+
+menuModalOverlay.addEventListener('click', () => {
+    menuModal.classList.add('hidden');
+});
+
+// 메뉴 아이템 클릭
+document.getElementById('menu-members').addEventListener('click', (e) => {
+    e.preventDefault();
+    window.location.href = `members.html?groupId=${groupId}`;
+});
+
+document.getElementById('menu-restaurants').addEventListener('click', (e) => {
+    e.preventDefault();
+    window.location.href = `restaurants.html?groupId=${groupId}`;
+});
+
+document.getElementById('menu-roulette').addEventListener('click', (e) => {
+    e.preventDefault();
+    alert('룰렛 기능은 다음 단계에서 구현됩니다.');
+});
+
+document.getElementById('menu-stats').addEventListener('click', (e) => {
+    e.preventDefault();
+    alert('통계/정산 기능은 다음 단계에서 구현됩니다.');
+});
+
+document.getElementById('menu-settings').addEventListener('click', (e) => {
+    e.preventDefault();
+    alert('설정 기능은 다음 단계에서 구현됩니다.');
 });
 
 // ===== 에러 메시지 표시/숨김 =====
