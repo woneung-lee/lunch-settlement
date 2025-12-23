@@ -190,6 +190,12 @@ function openMemberModal(memberId = null) {
         
         memberNameInput.value = '';
         isFrequentCheckbox.checked = false;
+
+        // 저장/삭제 버튼 상태 초기화(저장 중... 잔상 방지)
+saveMemberBtn.disabled = false;
+saveMemberBtn.textContent = '저장';
+deleteMemberBtn.disabled = false;
+deleteMemberBtn.textContent = '삭제';
     }
     
     memberModal.classList.remove('hidden');
@@ -201,6 +207,12 @@ function openMemberModal(memberId = null) {
 // ===== 모달 닫기 =====
 function closeMemberModal() {
     memberModal.classList.add('hidden');
+    
+    // 모달 닫을 때도 버튼 상태 초기화
+saveMemberBtn.disabled = false;
+saveMemberBtn.textContent = '저장';
+deleteMemberBtn.disabled = false;
+deleteMemberBtn.textContent = '삭제';
 }
 
 modalClose.addEventListener('click', closeMemberModal);
