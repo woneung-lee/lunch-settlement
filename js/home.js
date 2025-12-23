@@ -325,7 +325,7 @@ document.getElementById('menu-restaurants').addEventListener('click', (e) => {
 
 document.getElementById('menu-roulette').addEventListener('click', (e) => {
     e.preventDefault();
-    alert('룰렛 기능은 다음 단계에서 구현됩니다.');
+    window.location.href = `roulette.html?groupId=${groupId}`;
 });
 
 document.getElementById('menu-stats').addEventListener('click', (e) => {
