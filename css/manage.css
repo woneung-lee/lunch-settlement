@@ -1,0 +1,472 @@
+/* ===== 페이지 레이아웃 ===== */
+.page-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #E8F0FE 0%, #F5F7FA 50%, #FFFFFF 100%);
+}
+
+/* ===== 헤더 ===== */
+.header {
+    background: var(--bg-white);
+    box-shadow: var(--shadow-sm);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-center {
+    flex: 1;
+    text-align: center;
+}
+
+.header h1 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.btn-back {
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: transparent;
+    color: var(--text-dark);
+    font-size: 20px;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-back:hover {
+    background: var(--bg-main);
+}
+
+/* ===== 메인 컨텐츠 ===== */
+.main-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px 20px 100px;
+}
+
+/* ===== 로딩 상태 ===== */
+.loading-state {
+    text-align: center;
+    padding: 80px 20px;
+}
+
+.spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid var(--border);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    margin: 0 auto 20px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.loading-state p {
+    color: var(--text-medium);
+    font-size: 15px;
+}
+
+/* ===== 빈 상태 ===== */
+.empty-state {
+    text-align: center;
+    padding: 80px 20px;
+}
+
+.empty-icon {
+    font-size: 80px;
+    margin-bottom: 24px;
+    opacity: 0.8;
+}
+
+.empty-state h2 {
+    font-size: 24px;
+    color: var(--text-dark);
+    margin-bottom: 12px;
+}
+
+.empty-state p {
+    color: var(--text-medium);
+    font-size: 15px;
+}
+
+/* ===== 안내 박스 ===== */
+.info-box {
+    background: #E8F0FE;
+    border-left: 4px solid var(--primary);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    margin-bottom: 24px;
+}
+
+.info-box p {
+    color: var(--text-dark);
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 8px;
+}
+
+.info-box p:last-child {
+    margin-bottom: 0;
+}
+
+/* ===== 필터 컨테이너 ===== */
+.filter-container {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+}
+
+.filter-btn {
+    padding: 8px 16px;
+    border: 2px solid var(--border);
+    background: var(--bg-white);
+    color: var(--text-dark);
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.filter-btn:hover {
+    border-color: var(--primary-light);
+}
+
+.filter-btn.active {
+    border-color: var(--primary);
+    background: var(--primary);
+    color: white;
+}
+
+/* ===== 그룹원/음식점 리스트 ===== */
+.members-list, .restaurants-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+/* ===== 카드 ===== */
+.member-card, .restaurant-card {
+    background: var(--bg-white);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.member-card:hover, .restaurant-card:hover {
+    border-color: var(--primary-light);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.member-card.frequent {
+    border-color: var(--accent);
+    background: linear-gradient(135deg, #FFF9F5 0%, #FFFFFF 100%);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.card-icon {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, var(--primary-light) 0%, var(--secondary) 100%);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+.member-card.frequent .card-icon {
+    background: linear-gradient(135deg, #FF6B35 0%, #FFB347 100%);
+}
+
+.card-badge {
+    padding: 4px 8px;
+    background: var(--accent);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: var(--radius-sm);
+}
+
+.card-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 8px;
+}
+
+.card-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.card-info-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--text-medium);
+}
+
+.card-info-icon {
+    font-size: 14px;
+}
+
+.category-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    background: var(--bg-main);
+    color: var(--primary);
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+}
+
+/* ===== 플로팅 액션 버튼 ===== */
+.fab {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    border: none;
+    box-shadow: var(--shadow-lg);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 90;
+}
+
+.fab:hover {
+    transform: scale(1.1);
+    box-shadow: 0 8px 32px rgba(0, 102, 204, 0.4);
+}
+
+.fab:active {
+    transform: scale(1.05);
+}
+
+.fab-icon {
+    color: white;
+    font-size: 32px;
+    font-weight: 300;
+    display: block;
+    line-height: 1;
+}
+
+/* ===== 모달 ===== */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.modal.hidden {
+    display: none;
+}
+
+.modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    animation: fadeIn 0.2s ease-out;
+}
+
+.modal-content {
+    position: relative;
+    background: var(--bg-white);
+    border-radius: var(--radius-xl);
+    width: 100%;
+    max-width: 480px;
+    box-shadow: var(--shadow-lg);
+    animation: slideUp 0.3s ease-out;
+}
+
+.modal-header {
+    padding: 24px 24px 16px;
+    border-bottom: 2px solid var(--bg-main);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.modal-close {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: var(--bg-main);
+    color: var(--text-medium);
+    font-size: 24px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.modal-close:hover {
+    background: var(--border);
+    color: var(--text-dark);
+}
+
+.modal-body {
+    padding: 24px;
+}
+
+.modal-footer {
+    padding: 16px 24px 24px;
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.btn-secondary {
+    padding: 12px 24px;
+    border: 2px solid var(--border);
+    background: var(--bg-white);
+    color: var(--text-dark);
+    font-size: 15px;
+    font-weight: 600;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+    border-color: var(--text-medium);
+    background: var(--bg-main);
+}
+
+.btn-danger {
+    padding: 12px 24px;
+    border: none;
+    background: var(--error);
+    color: white;
+    font-size: 15px;
+    font-weight: 600;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-danger:hover {
+    background: #C62E3A;
+}
+
+/* ===== 폼 요소 ===== */
+.form-group select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-md);
+    font-size: 15px;
+    transition: all 0.3s ease;
+    background: var(--bg-white);
+    cursor: pointer;
+}
+
+.form-group select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(0, 102, 204, 0.1);
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+.checkbox-label span {
+    font-size: 15px;
+    color: var(--text-dark);
+    font-weight: 600;
+}
+
+/* ===== 반응형 ===== */
+@media (max-width: 768px) {
+    .members-list, .restaurants-list {
+        grid-template-columns: 1fr;
+    }
+    
+    .fab {
+        bottom: 24px;
+        right: 24px;
+        width: 56px;
+        height: 56px;
+    }
+    
+    .fab-icon {
+        font-size: 28px;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-content {
+        padding: 16px 12px 80px;
+    }
+    
+    .modal-body {
+        padding: 20px;
+    }
+}
