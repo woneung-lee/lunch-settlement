@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>점심 정산 - 로그인</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="auth-box">
+            <!-- 로고/타이틀 -->
+            <div class="logo-section">
+                <div class="logo-icon">🍱</div>
+                <h1>점심 정산</h1>
+                <p class="subtitle">총무를 위한 간편한 점심 관리</p>
+            </div>
+
+            <!-- 탭 전환 -->
+            <div class="tab-container">
+                <button class="tab-btn active" data-tab="login">로그인</button>
+                <button class="tab-btn" data-tab="signup">회원가입</button>
+            </div>
+
+            <!-- 로그인 폼 -->
+            <div id="login-form" class="auth-form active">
+                <div class="form-group">
+                    <label for="login-id">아이디</label>
+                    <input type="text" id="login-id" placeholder="아이디를 입력하세요">
+                </div>
+                <div class="form-group">
+                    <label for="login-password">비밀번호</label>
+                    <input type="password" id="login-password" placeholder="비밀번호를 입력하세요">
+                </div>
+                <button class="btn-primary" id="login-btn">로그인</button>
+                <div class="error-message" id="login-error"></div>
+            </div>
+
+            <!-- 회원가입 폼 -->
+            <div id="signup-form" class="auth-form">
+                <div class="form-group">
+                    <label for="signup-id">아이디</label>
+                    <input type="text" id="signup-id" placeholder="5~20자, 영문 소문자/숫자/-/_">
+                    <div class="input-hint">영문 소문자, 숫자, -, _ 사용 가능</div>
+                    <div class="error-message" id="id-error"></div>
+                </div>
+                <div class="form-group">
+                    <label for="signup-password">비밀번호</label>
+                    <input type="password" id="signup-password" placeholder="8~16자, 영문/숫자/특수문자 조합">
+                    <div class="input-hint">영문 대/소문자, 숫자, 특수문자 조합</div>
+                    <div class="error-message" id="password-error"></div>
+                </div>
+                <div class="form-group">
+                    <label for="signup-password-confirm">비밀번호 확인</label>
+                    <input type="password" id="signup-password-confirm" placeholder="비밀번호를 다시 입력하세요">
+                    <div class="error-message" id="password-confirm-error"></div>
+                </div>
+                <button class="btn-primary" id="signup-btn">회원가입</button>
+                <div class="error-message" id="signup-error"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <!-- 앱 스크립트 -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/auth.js"></script>
+</body>
+</html>
