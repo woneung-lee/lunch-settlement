@@ -1,6 +1,7 @@
 // ===== 전역 변수 =====
 let currentUser = null;
 let groupId = null;
+
 let restaurants = [];
 let selectedRestaurants = [];
 let currentFilter = 'all';
@@ -13,73 +14,69 @@ const rouletteContainer = document.getElementById('roulette-container');
 const emptyState = document.getElementById('empty-state');
 const goRestaurantsBtn = document.getElementById('go-restaurants-btn');
 
-// 하단 네비게이션
-const navHome = document.getElementById('nav-home');
-const navMembers = document.getElementById('nav-members');
-const navRestaurants = document.getElementById('nav-restaurants');
-const navRoulette = document.getElementById('nav-roulette');
-const navStats = document.getElementById('nav-stats');
-const navSettings = document.getElementById('nav-settings');
-
-// 룰렛 요소
 const rouletteWheel = document.getElementById('roulette-wheel');
 const rouletteCanvas = document.getElementById('roulette-canvas');
 const ctx = rouletteCanvas.getContext('2d');
 
-// 결과 요소
-const resultContainer = document.getElementById('result-container');
+const selectionContainer = document.getElementById('selection-container');
+const selectAllBtn = document.getElementById('select-all-btn');
+const deselectAllBtn = document.getElementById('deselect-all-btn');
+const filterButtons = document.querySelectorAll('.filter-btn');
+const restaurantsChecklist = document.getElementById('restaurants-checklist');
+const startRouletteBtn = document.getElementById('start-roulette-btn');
+
+// 결과 모달
+const resultModalOverlay = document.getElementById('result-modal-overlay');
+const resultModalClose = document.getElementById('result-modal-close');
 const resultRestaurant = document.getElementById('result-restaurant');
 const resultCategory = document.getElementById('result-category');
 const startAgainBtn = document.getElementById('start-again-btn');
 
-// 선택 요소
-const selectionContainer = document.getElementById('selection-container');
-const selectAllBtn = document.getElementById('select-all-btn');
-const deselectAllBtn = document.getElementById('deselect-all-btn');
-const restaurantsChecklist = document.getElementById('restaurants-checklist');
-const startRouletteBtn = document.getElementById('start-roulette-btn');
+// 네비게이션(있는 경우만)
+const navIds = ['nav-home', 'nav-members', 'nav-restaurants', 'nav-roulette', 'nav-stats', 'nav-settings'];
 
-// 필터 버튼들
-const filterBtns = document.querySelectorAll('.filter-btn');
+// ===== 초기 설정 =====
+(function init() {
+    const params = new URLSearchParams(window.location.search);
+    groupId = params.get('groupId');
 
-// ===== URL에서 groupId 가져오기 =====
-const urlParams = new URLSearchParams(window.location.search);
-groupId = urlParams.get('groupId');
+    if (!groupId) {
+        alert('그룹 정보가 없습니다.');
+        window.location.href = 'groups.html';
+        return;
+    }
 
-if (!groupId) {
-    alert('그룹 정보가 없습니다.');
-    window.location.href = 'groups.html';
-}
+    // 네비게이션 href 세팅(그룹ID 유지)
+    const routes = {
+        'nav-home': `home.html?groupId=${groupId}`,
+        'nav-members': `members.html?groupId=${groupId}`,
+        'nav-restaurants': `restaurants.html?groupId=${groupId}`,
+        'nav-roulette': `roulette.html?groupId=${groupId}`,
+        'nav-stats': `stats.html?groupId=${groupId}`,
+        'nav-settings': `settings.html?groupId=${groupId}`
+    };
+    navIds.forEach((id) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.setAttribute('href', routes[id] || '#');
+    });
+})();
 
-if (navHome) navHome.addEventListener('click', (e) => {
-    e.preventDefault();
+// ===== 이벤트: 뒤로가기/이동 =====
+backBtn.addEventListener('click', () => {
     window.location.href = `home.html?groupId=${groupId}`;
 });
-if (navMembers) navMembers.addEventListener('click', (e) => {
-    e.preventDefault();
-    window.location.href = `members.html?groupId=${groupId}`;
-});
-if (navRestaurants) navRestaurants.addEventListener('click', (e) => {
-    e.preventDefault();
+
+goRestaurantsBtn.addEventListener('click', () => {
     window.location.href = `restaurants.html?groupId=${groupId}`;
 });
-if (navStats) navStats.addEventListener('click', (e) => {
-    e.preventDefault();
-    window.location.href = `stats.html?groupId=${groupId}`;
-});
-if (navSettings) navSettings.addEventListener('click', (e) => {
-    e.preventDefault();
-    window.location.href = `settings.html?groupId=${groupId}`;
-});
-if (navRoulette) navRoulette.addEventListener('click', (e) => e.preventDefault());
 
-// ===== 인증 상태 확인 =====
+// ===== 인증 확인 =====
 auth.onAuthStateChanged(async (user) => {
     if (!user) {
         window.location.href = 'index.html';
         return;
     }
-    
     currentUser = user;
     await loadRestaurants();
 });
@@ -88,139 +85,37 @@ auth.onAuthStateChanged(async (user) => {
 async function loadRestaurants() {
     try {
         showLoading();
-        
+
         const snapshot = await db.collection('groups').doc(groupId)
             .collection('restaurants')
             .orderBy('name')
             .get();
-        
+
         restaurants = [];
-        snapshot.forEach(doc => {
+        snapshot.forEach((doc) => {
             restaurants.push({ id: doc.id, ...doc.data() });
         });
-        
+
         if (restaurants.length === 0) {
             showEmptyState();
-        } else {
-            renderRestaurantsChecklist();
-            showRouletteContainer();
+            return;
         }
-        
-    } catch (error) {
-        console.error('음식점 목록 로드 오류:', error);
-        alert('음식점 목록을 불러오는 중 오류가 발생했습니다.');
-    }
-}
 
-// ===== 음식점 체크리스트 렌더링 =====
-function renderRestaurantsChecklist() {
-    restaurantsChecklist.innerHTML = '';
-    
-    // 필터링
-    const filteredRestaurants = currentFilter === 'all' 
-        ? restaurants 
-        : restaurants.filter(r => r.category === currentFilter);
-    
-    if (filteredRestaurants.length === 0) {
-        restaurantsChecklist.innerHTML = `
-            <div style="grid-column: 1/-1; text-align: center; padding: 40px 20px;">
-                <p style="color: var(--text-medium); font-size: 15px;">
-                    해당 카테고리의 음식점이 없습니다.
-                </p>
-            </div>
-        `;
-        return;
-    }
-    
-    filteredRestaurants.forEach(restaurant => {
-        const item = createCheckboxItem(restaurant);
-        restaurantsChecklist.appendChild(item);
-    });
-}
+        // 기본: 전체 선택(사용성 유지)
+        selectedRestaurants = restaurants.map(r => ({ id: r.id, name: r.name, category: r.category || '기타' }));
 
-// ===== 체크박스 아이템 생성 =====
-function createCheckboxItem(restaurant) {
-    const item = document.createElement('div');
-    item.className = 'restaurant-checkbox-item';
-    
-    const isChecked = selectedRestaurants.some(r => r.id === restaurant.id);
-    if (isChecked) {
-        item.classList.add('checked');
-    }
-    
-    item.innerHTML = `
-        <input type="checkbox" id="rest-${restaurant.id}" ${isChecked ? 'checked' : ''}>
-        <label for="rest-${restaurant.id}" class="restaurant-checkbox-label">
-            <div class="restaurant-checkbox-name">${escapeHtml(restaurant.name)}</div>
-            <div class="restaurant-checkbox-category">${restaurant.category}</div>
-        </label>
-    `;
-    
-    const checkbox = item.querySelector('input[type="checkbox"]');
-    checkbox.addEventListener('change', () => {
-        if (checkbox.checked) {
-            selectedRestaurants.push(restaurant);
-            item.classList.add('checked');
-        } else {
-            selectedRestaurants = selectedRestaurants.filter(r => r.id !== restaurant.id);
-            item.classList.remove('checked');
-        }
-        updateStartButton();
-    });
-    
-    item.addEventListener('click', (e) => {
-        if (e.target.tagName !== 'INPUT') {
-            checkbox.checked = !checkbox.checked;
-            checkbox.dispatchEvent(new Event('change'));
-        }
-    });
-    
-    return item;
-}
-
-// ===== HTML 이스케이프 (XSS 방지) =====
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-// ===== 카테고리 필터 =====
-filterBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-        filterBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        
-        currentFilter = btn.dataset.category;
         renderRestaurantsChecklist();
-    });
-});
-
-// ===== 전체 선택/해제 =====
-selectAllBtn.addEventListener('click', () => {
-    selectedRestaurants = [...restaurants];
-    renderRestaurantsChecklist();
-    updateStartButton();
-});
-
-deselectAllBtn.addEventListener('click', () => {
-    selectedRestaurants = [];
-    renderRestaurantsChecklist();
-    updateStartButton();
-});
-
-// ===== 시작 버튼 활성화/비활성화 =====
-function updateStartButton() {
-    if (selectedRestaurants.length >= 2) {
-        startRouletteBtn.disabled = false;
-        startRouletteBtn.textContent = `룰렛 시작 🎰 (${selectedRestaurants.length}개 후보)`;
-    } else {
-        startRouletteBtn.disabled = true;
-        startRouletteBtn.textContent = '최소 2개 이상 선택해주세요';
+        drawRouletteWheel();
+        updateStartButton();
+        showRouletteContainer();
+    } catch (error) {
+        console.error('음식점 목록 로드 실패:', error);
+        alert('음식점 목록을 불러오지 못했습니다.');
+        showEmptyState();
     }
 }
 
-// ===== 상태 표시 함수들 =====
+// ===== 화면 상태 =====
 function showLoading() {
     loadingState.classList.remove('hidden');
     rouletteContainer.classList.add('hidden');
@@ -239,141 +134,275 @@ function showEmptyState() {
     emptyState.classList.remove('hidden');
 }
 
-// ===== 뒤로 가기 =====
-backBtn.addEventListener('click', () => {
-    window.location.href = `home.html?groupId=${groupId}`;
+// ===== 필터/선택 UI =====
+filterButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+        filterButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilter = btn.getAttribute('data-category') || 'all';
+        renderRestaurantsChecklist();
+    });
 });
 
-// ===== 음식점 관리로 이동 =====
-goRestaurantsBtn.addEventListener('click', () => {
-    window.location.href = `restaurants.html?groupId=${groupId}`;
+selectAllBtn.addEventListener('click', () => {
+    const list = getFilteredRestaurants();
+    list.forEach(r => {
+        if (!selectedRestaurants.some(s => s.id === r.id)) {
+            selectedRestaurants.push({ id: r.id, name: r.name, category: r.category || '기타' });
+        }
+    });
+    renderRestaurantsChecklist();
+    drawRouletteWheel();
+    updateStartButton();
 });
+
+deselectAllBtn.addEventListener('click', () => {
+    const list = getFilteredRestaurants();
+    const idsToRemove = new Set(list.map(r => r.id));
+    selectedRestaurants = selectedRestaurants.filter(s => !idsToRemove.has(s.id));
+    renderRestaurantsChecklist();
+    drawRouletteWheel();
+    updateStartButton();
+});
+
+function getFilteredRestaurants() {
+    if (currentFilter === 'all') return restaurants;
+    return restaurants.filter(r => (r.category || '기타') === currentFilter);
+}
+
+function renderRestaurantsChecklist() {
+    const list = getFilteredRestaurants();
+    restaurantsChecklist.innerHTML = '';
+
+    if (list.length === 0) {
+        restaurantsChecklist.innerHTML = `<div style="padding:12px; color: var(--text-medium);">해당 카테고리에 음식점이 없습니다.</div>`;
+        return;
+    }
+
+    list.forEach((r) => {
+        restaurantsChecklist.appendChild(createCheckboxItem(r));
+    });
+}
+
+function createCheckboxItem(restaurant) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'check-item';
+
+    const left = document.createElement('div');
+    left.className = 'check-left';
+
+    const id = `rest-check-${restaurant.id}`;
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.id = id;
+    checkbox.checked = selectedRestaurants.some(s => s.id === restaurant.id);
+
+    checkbox.addEventListener('change', () => {
+        const exists = selectedRestaurants.some(s => s.id === restaurant.id);
+        if (checkbox.checked && !exists) {
+            selectedRestaurants.push({ id: restaurant.id, name: restaurant.name, category: restaurant.category || '기타' });
+        }
+        if (!checkbox.checked && exists) {
+            selectedRestaurants = selectedRestaurants.filter(s => s.id !== restaurant.id);
+        }
+        drawRouletteWheel();
+        updateStartButton();
+    });
+
+    const label = document.createElement('label');
+    label.setAttribute('for', id);
+    label.className = 'check-name';
+    label.textContent = restaurant.name || '(이름 없음)';
+
+    left.appendChild(checkbox);
+    left.appendChild(label);
+
+    const badge = document.createElement('div');
+    badge.className = 'check-category';
+    badge.textContent = restaurant.category || '기타';
+
+    wrapper.appendChild(left);
+    wrapper.appendChild(badge);
+
+    return wrapper;
+}
+
+function updateStartButton() {
+    if (selectedRestaurants.length >= 2) {
+        startRouletteBtn.disabled = false;
+        startRouletteBtn.textContent = `룰렛 시작 🎰 (${selectedRestaurants.length}개 후보)`;
+    } else {
+        startRouletteBtn.disabled = true;
+        startRouletteBtn.textContent = '최소 2개 이상 선택해주세요';
+    }
+}
 
 // ===== 룰렛 휠 그리기 =====
 function drawRouletteWheel() {
-    const wheelSize = 320;
-    rouletteCanvas.width = wheelSize;
-    rouletteCanvas.height = wheelSize;
-    
-    const centerX = wheelSize / 2;
-    const centerY = wheelSize / 2;
-    const radius = wheelSize / 2 - 10;
-    
-    const sliceAngle = (2 * Math.PI) / selectedRestaurants.length;
-    
-    // 색상 팔레트
+    const count = selectedRestaurants.length;
+
+    // 캔버스 DPI 대응
+    const size = 320;
+    const dpr = window.devicePixelRatio || 1;
+    rouletteCanvas.width = Math.floor(size * dpr);
+    rouletteCanvas.height = Math.floor(size * dpr);
+    rouletteCanvas.style.width = `${size}px`;
+    rouletteCanvas.style.height = `${size}px`;
+
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    ctx.clearRect(0, 0, size, size);
+
+    // 후보가 너무 적으면 빈 원만 표시
+    if (count < 2) {
+        ctx.beginPath();
+        ctx.arc(size / 2, size / 2, (size / 2) - 6, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,0.08)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        return;
+    }
+
+    const centerX = size / 2;
+    const centerY = size / 2;
+    const radius = (size / 2) - 6;
+
+    const sliceAngle = (Math.PI * 2) / count;
+    let startAngle = -Math.PI / 2; // 포인터가 위에 있으므로 -90도부터 시작
+
     const colors = [
-        '#0066CC', '#00A9E0', '#FF6B35', '#06A77D',
-        '#3385DB', '#FFB347', '#4ECDC4', '#95E1D3'
+        '#FFB3BA', '#BAE1FF', '#BAFFC9', '#FFFFBA',
+        '#D7BAFF', '#FFD6A5', '#BDE0FE', '#CDEAC0',
+        '#FEC5BB', '#A0C4FF', '#CAFFBF', '#FDFFB6'
     ];
-    
-    selectedRestaurants.forEach((restaurant, index) => {
-        const startAngle = index * sliceAngle - Math.PI / 2;
-        const endAngle = (index + 1) * sliceAngle - Math.PI / 2;
-        
-        // 슬라이스 그리기
+
+    for (let i = 0; i < count; i++) {
+        const endAngle = startAngle + sliceAngle;
+
+        // slice
         ctx.beginPath();
         ctx.moveTo(centerX, centerY);
         ctx.arc(centerX, centerY, radius, startAngle, endAngle);
         ctx.closePath();
-        
-        ctx.fillStyle = colors[index % colors.length];
+        ctx.fillStyle = colors[i % colors.length];
         ctx.fill();
-        
-        ctx.strokeStyle = '#FFFFFF';
-        ctx.lineWidth = 3;
+
+        // slice border
+        ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+        ctx.lineWidth = 2;
         ctx.stroke();
-        
-        // 텍스트 그리기
+
+        // text
+        const name = selectedRestaurants[i].name || '';
         ctx.save();
         ctx.translate(centerX, centerY);
         ctx.rotate(startAngle + sliceAngle / 2);
-        ctx.textAlign = 'center';
-        ctx.fillStyle = '#FFFFFF';
-        ctx.font = 'bold 16px sans-serif';
-        
-        const text = restaurant.name;
-        const textRadius = radius * 0.65;
-        
-        // 텍스트가 길면 줄임
-        const maxWidth = radius * 0.8;
-        let displayText = text;
-        if (ctx.measureText(text).width > maxWidth) {
-            displayText = text.substring(0, 8) + '...';
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#1f2a37';
+        ctx.font = '800 13px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+
+        const maxWidth = radius - 22;
+        let displayText = name;
+        if (ctx.measureText(displayText).width > maxWidth) {
+            displayText = displayText.slice(0, 8) + '…';
         }
-        
-        ctx.fillText(displayText, textRadius, 0);
+        ctx.fillText(displayText, radius - 14, 4);
         ctx.restore();
-    });
-    
-    // 중앙 원 그리기
+
+        startAngle = endAngle;
+    }
+
+    // center circle
     ctx.beginPath();
-    ctx.arc(centerX, centerY, 30, 0, 2 * Math.PI);
-    ctx.fillStyle = '#FFFFFF';
+    ctx.arc(centerX, centerY, 34, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffffff';
     ctx.fill();
-    ctx.strokeStyle = '#0066CC';
-    ctx.lineWidth = 4;
+    ctx.strokeStyle = 'rgba(0,0,0,0.06)';
+    ctx.lineWidth = 2;
     ctx.stroke();
+
+    ctx.fillStyle = '#111827';
+    ctx.font = '900 12px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('LUNCH', centerX, centerY + 4);
 }
 
-// ===== 룰렛 시작 =====
+// ===== 룰렛 시작(회전) =====
 startRouletteBtn.addEventListener('click', () => {
-    if (isSpinning || selectedRestaurants.length < 2) return;
-    
+    if (isSpinning) return;
+    if (selectedRestaurants.length < 2) return;
+
     isSpinning = true;
-    resultContainer.classList.add('hidden');
+
+    // 선택 영역은 동작 중 가독성 위해 숨김(기존 동작 유지)
     selectionContainer.classList.add('hidden');
-    
-    // 룰렛 휠 그리기
+
+    // 회전 전에 휠 재그리기
     drawRouletteWheel();
-    
+
     // 랜덤 회전 각도 계산 (최소 5바퀴)
     const minSpins = 5;
     const maxSpins = 8;
     const spins = minSpins + Math.random() * (maxSpins - minSpins);
     const randomDegree = Math.random() * 360;
     const totalRotation = (spins * 360) + randomDegree;
-    
-    // 애니메이션 적용
-    rouletteCanvas.style.transform = `rotate(${totalRotation}deg)`;
-    
-// 4초 후 결과 표시
-setTimeout(() => {
-    showResult(totalRotation);
-}, 4000);
+
+    // 회전 적용
+    rouletteWheel.style.transform = `rotate(${totalRotation}deg)`;
+
+    // 4초 후 결과 표시(팝업)
+    setTimeout(() => {
+        showResult(totalRotation);
+    }, 4000);
 });
 
-// ===== 결과 표시 =====
+// ===== 결과 표시(팝업) =====
 function showResult(finalDegree) {
-    // 최종 각도를 0-360 범위로 정규화
+    // 최종 각도를 0-360 범위로 정규화(포인터 기준 보정)
     const normalizedDegree = (360 - (finalDegree % 360)) % 360;
-    
-    // 슬라이스 각도
+
     const sliceAngle = 360 / selectedRestaurants.length;
-    
-    // 포인터가 가리키는 슬라이스 찾기
     const selectedIndex = Math.floor(normalizedDegree / sliceAngle);
     const winner = selectedRestaurants[selectedIndex];
-    
-    // 결과 표시
-    resultRestaurant.textContent = winner.name;
-    resultCategory.textContent = winner.category;
-    resultContainer.classList.remove('hidden');
-    
+
+    resultRestaurant.textContent = winner?.name || '';
+    resultCategory.textContent = winner?.category || '';
+
+    // 팝업 표시
+    resultModalOverlay.classList.remove('hidden');
+    resultModalOverlay.setAttribute('aria-hidden', 'false');
+
     isSpinning = false;
 }
 
+// ===== 팝업 닫기(×) =====
+resultModalClose.addEventListener('click', () => {
+    resultModalOverlay.classList.add('hidden');
+    resultModalOverlay.setAttribute('aria-hidden', 'true');
+    // 닫을 때는 후보 선택 다시 표시
+    selectionContainer.classList.remove('hidden');
+});
+
 // ===== 다시 시작 =====
 startAgainBtn.addEventListener('click', () => {
+    // 팝업 닫기
+    resultModalOverlay.classList.add('hidden');
+    resultModalOverlay.setAttribute('aria-hidden', 'true');
+
     // 룰렛 휠 초기화
-    rouletteCanvas.style.transform = 'rotate(0deg)';
-    rouletteCanvas.style.transition = 'none';
-    
+    rouletteWheel.style.transition = 'none';
+    rouletteWheel.style.transform = 'rotate(0deg)';
+
+    // transition 복원 + 선택 표시
     setTimeout(() => {
-        rouletteCanvas.style.transition = 'transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99)';
-        resultContainer.classList.add('hidden');
+        rouletteWheel.style.transition = 'transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99)';
         selectionContainer.classList.remove('hidden');
-        ctx.clearRect(0, 0, rouletteCanvas.width, rouletteCanvas.height);
+        drawRouletteWheel();
+        updateStartButton();
     }, 50);
 });
+
 
