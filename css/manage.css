@@ -257,7 +257,7 @@
 /* ===== 플로팅 액션 버튼 ===== */
 .fab {
     position: fixed;
-    bottom: 32px;
+    bottom: 104px; /* 하단 네비게이션에 가리지 않도록 상향 */
     right: 32px;
     width: 64px;
     height: 64px;
