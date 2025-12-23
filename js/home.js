@@ -716,10 +716,12 @@ saveMealBtn.addEventListener('click', async () => {
                 .collection('meals').add(mealData);
         }
         
-        await loadMembers();
-        await loadMeals();
-        renderCalendar();
-        closeMealModal();
+// 먼저 모달을 닫아 체감 속도 개선(저장은 이미 완료된 상태)
+closeMealModal();
+
+// 로딩은 병렬 처리하여 시간 단축
+await Promise.all([loadMembers(), loadMeals()]);
+renderCalendar();
         
     } catch (error) {
         console.error('식사 기록 저장 오류:', error);
