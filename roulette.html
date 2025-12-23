@@ -1,28 +1,28 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>룰렛 - 점심 정산</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/roulette.css">
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/roulette.css" />
 </head>
 <body>
     <div class="page-container">
         <!-- 헤더 -->
         <header class="header">
             <div class="header-content">
-                <button class="btn-back" id="back-btn">
+                <button class="btn-back" id="back-btn" type="button" aria-label="뒤로가기">
                     <span>←</span>
                 </button>
                 <div class="header-center">
                     <h1>오늘의 점심 추천</h1>
+                    <p>룰렛으로 랜덤 추천을 받아보세요</p>
                 </div>
-                <div style="width: 36px;"></div>
+                <div class="header-right"></div>
             </div>
         </header>
 
-        <!-- 메인 컨텐츠 -->
         <main class="main-content">
             <!-- 로딩 상태 -->
             <div class="loading-state" id="loading-state">
@@ -33,42 +33,25 @@
             <!-- 룰렛 컨테이너 -->
             <div class="roulette-container hidden" id="roulette-container">
 
-                                <!-- 음식점 선택 -->
+                <!-- 후보 선택(상단) -->
                 <div class="selection-container" id="selection-container">
                     <div class="selection-header">
                         <h3>후보 선택</h3>
                         <div class="selection-actions">
-                            <button class="btn-select-all" id="select-all-btn">전체 선택</button>
-                            <button class="btn-deselect-all" id="deselect-all-btn">전체 해제</button>
+                            <button class="btn-select-all" id="select-all-btn" type="button">전체 선택</button>
+                            <button class="btn-deselect-all" id="deselect-all-btn" type="button">전체 해제</button>
                         </div>
-                
-                <!-- 룰렛 휠 -->
-                <div class="roulette-wheel-container">
-                    <div class="roulette-wheel" id="roulette-wheel">
-                        <canvas id="roulette-canvas"></canvas>
-                    </div>
-                    <div class="roulette-pointer">▼</div>
-                </div>
-
-                <!-- 결과 표시 -->
-                <div class="result-container hidden" id="result-container">
-                    <div class="result-icon">🎉</div>
-                    <h2>오늘의 점심은</h2>
-                    <div class="result-restaurant" id="result-restaurant"></div>
-                    <div class="result-category" id="result-category"></div>
-                    <button class="btn-primary" id="start-again-btn">다시 돌리기</button>
-                </div>
                     </div>
 
                     <!-- 카테고리 필터 -->
                     <div class="filter-container">
-                        <button class="filter-btn active" data-category="all">전체</button>
-                        <button class="filter-btn" data-category="한식">한식</button>
-                        <button class="filter-btn" data-category="중식">중식</button>
-                        <button class="filter-btn" data-category="일식">일식</button>
-                        <button class="filter-btn" data-category="양식">양식</button>
-                        <button class="filter-btn" data-category="분식">분식</button>
-                        <button class="filter-btn" data-category="기타">기타</button>
+                        <button class="filter-btn active" type="button" data-category="all">전체</button>
+                        <button class="filter-btn" type="button" data-category="한식">한식</button>
+                        <button class="filter-btn" type="button" data-category="중식">중식</button>
+                        <button class="filter-btn" type="button" data-category="일식">일식</button>
+                        <button class="filter-btn" type="button" data-category="양식">양식</button>
+                        <button class="filter-btn" type="button" data-category="분식">분식</button>
+                        <button class="filter-btn" type="button" data-category="기타">기타</button>
                     </div>
 
                     <!-- 음식점 체크리스트 -->
@@ -77,9 +60,17 @@
                     </div>
 
                     <!-- 룰렛 시작 버튼 -->
-                    <button class="btn-start-roulette" id="start-roulette-btn" disabled>
-                        룰렛 시작 🎰
+                    <button class="btn-start-roulette" id="start-roulette-btn" type="button" disabled>
+                        최소 2개 이상 선택해주세요
                     </button>
+                </div>
+
+                <!-- 룰렛 휠 -->
+                <div class="roulette-wheel-container">
+                    <div class="roulette-wheel" id="roulette-wheel" aria-label="룰렛 휠">
+                        <canvas id="roulette-canvas"></canvas>
+                    </div>
+                    <div class="roulette-pointer" aria-hidden="true">▼</div>
                 </div>
             </div>
 
@@ -88,43 +79,62 @@
                 <div class="empty-icon">🍽️</div>
                 <h2>등록된 음식점이 없습니다</h2>
                 <p>음식점을 먼저 등록해주세요!</p>
-                <button class="btn-primary" id="go-restaurants-btn">음식점 관리</button>
+                <button class="btn-primary" id="go-restaurants-btn" type="button">음식점 관리</button>
             </div>
         </main>
-<nav class="bottom-nav">
-    <a href="#" class="nav-item" id="nav-home">
-        <span class="nav-icon">📅</span>
-        <span class="nav-label">홈</span>
-    </a>
-    <a href="#" class="nav-item active" id="nav-members">
-        <span class="nav-icon">👥</span>
-        <span class="nav-label">그룹원</span>
-    </a>
-    <a href="#" class="nav-item" id="nav-restaurants">
-        <span class="nav-icon">🍽️</span>
-        <span class="nav-label">음식점</span>
-    </a>
-    <a href="#" class="nav-item" id="nav-roulette">
-        <span class="nav-icon">🎰</span>
-        <span class="nav-label">룰렛</span>
-    </a>
-    <a href="#" class="nav-item" id="nav-stats">
-        <span class="nav-icon">📊</span>
-        <span class="nav-label">통계</span>
-    </a>
-    <a href="#" class="nav-item" id="nav-settings">
-        <span class="nav-icon">⚙️</span>
-        <span class="nav-label">설정</span>
-    </a>
-</nav>
-        
+
+        <!-- (선택) 하단 네비게이션: 이미 다른 화면에 적용 중이라면 동일 구성으로 사용 -->
+        <nav class="bottom-nav">
+            <a href="#" class="nav-item" id="nav-home">
+                <span class="nav-icon">📅</span>
+                <span class="nav-label">홈</span>
+            </a>
+            <a href="#" class="nav-item" id="nav-members">
+                <span class="nav-icon">👥</span>
+                <span class="nav-label">그룹원</span>
+            </a>
+            <a href="#" class="nav-item" id="nav-restaurants">
+                <span class="nav-icon">🍽️</span>
+                <span class="nav-label">음식점</span>
+            </a>
+            <a href="#" class="nav-item active" id="nav-roulette">
+                <span class="nav-icon">🎰</span>
+                <span class="nav-label">룰렛</span>
+            </a>
+            <a href="#" class="nav-item" id="nav-stats">
+                <span class="nav-icon">📊</span>
+                <span class="nav-label">통계</span>
+            </a>
+            <a href="#" class="nav-item" id="nav-settings">
+                <span class="nav-icon">⚙️</span>
+                <span class="nav-label">설정</span>
+            </a>
+        </nav>
+    </div>
+
+    <!-- 결과 팝업(모달) -->
+    <div class="result-modal-overlay hidden" id="result-modal-overlay" aria-hidden="true">
+        <div class="result-modal" role="dialog" aria-modal="true" aria-labelledby="result-title">
+            <button class="result-modal-close" id="result-modal-close" type="button" aria-label="닫기">×</button>
+
+            <div class="result-container" id="result-container">
+                <div class="result-icon">🎉</div>
+                <h2 id="result-title">오늘의 점심은</h2>
+                <div class="result-restaurant" id="result-restaurant"></div>
+                <div class="result-category" id="result-category"></div>
+
+                <div class="result-actions">
+                    <button class="btn-primary" id="start-again-btn" type="button">다시 돌리기</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    
+
     <!-- 앱 스크립트 -->
     <script src="js/firebase-config.js"></script>
     <script src="js/roulette.js"></script>
