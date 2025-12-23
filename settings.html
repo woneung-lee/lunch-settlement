@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>설정 - 점심 정산</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/settings.css">
+</head>
+<body>
+    <div class="page-container">
+        <!-- 헤더 -->
+        <header class="header">
+            <div class="header-content">
+                <button class="btn-back" id="back-btn">
+                    <span>←</span>
+                </button>
+                <div class="header-center">
+                    <h1>설정</h1>
+                </div>
+                <div style="width: 36px;"></div>
+            </div>
+        </header>
+
+        <!-- 메인 컨텐츠 -->
+        <main class="main-content">
+            <!-- 로딩 상태 -->
+            <div class="loading-state" id="loading-state">
+                <div class="spinner"></div>
+                <p>설정을 불러오는 중...</p>
+            </div>
+
+            <!-- 설정 컨테이너 -->
+            <div class="settings-container hidden" id="settings-container">
+                <!-- 그룹 정보 -->
+                <div class="settings-section">
+                    <h3>그룹 정보</h3>
+                    <div class="setting-item">
+                        <div class="setting-label">그룹명</div>
+                        <div class="setting-value" id="group-name-display">-</div>
+                        <button class="btn-edit" id="edit-group-name-btn">수정</button>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">생성일</div>
+                        <div class="setting-value" id="group-created-date">-</div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">총 그룹원 수</div>
+                        <div class="setting-value" id="total-members">0명</div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">총 음식점 수</div>
+                        <div class="setting-value" id="total-restaurants">0곳</div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">총 식사 기록</div>
+                        <div class="setting-value" id="total-meals">0회</div>
+                    </div>
+                </div>
+
+                <!-- 계정 정보 -->
+                <div class="settings-section">
+                    <h3>계정 정보</h3>
+                    <div class="setting-item">
+                        <div class="setting-label">아이디</div>
+                        <div class="setting-value" id="user-id">-</div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">가입일</div>
+                        <div class="setting-value" id="user-created-date">-</div>
+                    </div>
+                </div>
+
+                <!-- 위험 영역 -->
+                <div class="settings-section danger-zone">
+                    <h3>⚠️ 위험 영역</h3>
+                    <div class="danger-warning">
+                        <p>그룹을 삭제하면 <strong>모든 데이터가 영구적으로 삭제</strong>되며 복구할 수 없습니다.</p>
+                        <p>삭제되는 데이터: 그룹원, 음식점, 식사 기록</p>
+                    </div>
+                    <button class="btn-delete-group" id="delete-group-btn">
+                        그룹 삭제
+                    </button>
+                </div>
+
+                <!-- 로그아웃 -->
+                <div class="settings-section">
+                    <button class="btn-logout" id="logout-btn">로그아웃</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 그룹명 수정 모달 -->
+    <div class="modal hidden" id="edit-modal">
+        <div class="modal-overlay" id="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>그룹명 수정</h2>
+                <button class="modal-close" id="modal-close">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="new-group-name">새 그룹명</label>
+                    <input type="text" id="new-group-name" placeholder="그룹명을 입력하세요" maxlength="30">
+                    <div class="input-hint">최대 30자</div>
+                    <div class="error-message" id="name-error"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancel-btn">취소</button>
+                <button class="btn-primary" id="save-name-btn">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 그룹 삭제 확인 모달 -->
+    <div class="modal hidden" id="delete-modal">
+        <div class="modal-overlay" id="delete-modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>⚠️ 그룹 삭제 확인</h2>
+                <button class="modal-close" id="delete-modal-close">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="delete-warning">
+                    <p>정말로 이 그룹을 삭제하시겠습니까?</p>
+                    <p><strong>모든 데이터가 영구적으로 삭제되며 복구할 수 없습니다.</strong></p>
+                </div>
+                <div class="form-group">
+                    <label for="delete-confirm-input">
+                        확인을 위해 "<strong id="group-name-confirm">그룹명</strong>"을 입력해주세요.
+                    </label>
+                    <input type="text" id="delete-confirm-input" placeholder="그룹명 입력">
+                    <div class="error-message" id="delete-error"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="delete-cancel-btn">취소</button>
+                <button class="btn-danger" id="confirm-delete-btn">삭제</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <!-- 앱 스크립트 -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/settings.js"></script>
+</body>
+</html>

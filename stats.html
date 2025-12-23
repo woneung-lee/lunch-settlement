@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>통계/정산 - 점심 정산</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/stats.css">
+</head>
+<body>
+    <div class="page-container">
+        <!-- 헤더 -->
+        <header class="header">
+            <div class="header-content">
+                <button class="btn-back" id="back-btn">
+                    <span>←</span>
+                </button>
+                <div class="header-center">
+                    <h1>통계/정산</h1>
+                </div>
+                <div style="width: 36px;"></div>
+            </div>
+        </header>
+
+        <!-- 메인 컨텐츠 -->
+        <main class="main-content">
+            <!-- 기간 선택 -->
+            <div class="period-selector">
+                <h3>기간 선택</h3>
+                <div class="period-inputs">
+                    <div class="period-input-group">
+                        <label>시작일</label>
+                        <input type="date" id="start-date">
+                    </div>
+                    <span class="period-separator">~</span>
+                    <div class="period-input-group">
+                        <label>종료일</label>
+                        <input type="date" id="end-date">
+                    </div>
+                </div>
+                <div class="period-presets">
+                    <button class="preset-btn" data-preset="this-month">이번 달</button>
+                    <button class="preset-btn" data-preset="last-month">지난 달</button>
+                    <button class="preset-btn" data-preset="this-year">올해</button>
+                </div>
+                <button class="btn-primary" id="load-stats-btn">통계 조회</button>
+            </div>
+
+            <!-- 로딩 상태 -->
+            <div class="loading-state hidden" id="loading-state">
+                <div class="spinner"></div>
+                <p>통계를 분석하는 중...</p>
+            </div>
+
+            <!-- 통계 결과 -->
+            <div class="stats-container hidden" id="stats-container">
+                <!-- 요약 카드 -->
+                <div class="summary-cards">
+                    <div class="summary-card">
+                        <div class="summary-icon">📊</div>
+                        <div class="summary-content">
+                            <div class="summary-label">총 식사 횟수</div>
+                            <div class="summary-value" id="total-meals">0회</div>
+                        </div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-icon">💰</div>
+                        <div class="summary-content">
+                            <div class="summary-label">총 지출 금액</div>
+                            <div class="summary-value" id="total-amount">0원</div>
+                        </div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-icon">🍽️</div>
+                        <div class="summary-content">
+                            <div class="summary-label">방문 음식점</div>
+                            <div class="summary-value" id="total-restaurants">0곳</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 사람별 지출액 -->
+                <div class="stats-section" id="stats-section-members">
+                    <div class="section-header">
+                        <h3>👥 사람별 총 지출액</h3>
+                    </div>
+                    <div class="stats-table-container">
+                        <table class="stats-table">
+                            <thead>
+                                <tr>
+                                    <th>순위</th>
+                                    <th>이름</th>
+                                    <th>지출액</th>
+                                    <th>비율</th>
+                                </tr>
+                            </thead>
+                            <tbody id="members-table-body">
+                                <!-- 데이터가 동적으로 추가됨 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 음식점별 방문 랭킹 -->
+                <div class="stats-section" id="stats-section-visit">
+                    <div class="section-header">
+                        <h3>🏆 음식점별 방문 랭킹</h3>
+                    </div>
+                    <div class="stats-table-container">
+                        <table class="stats-table">
+                            <thead>
+                                <tr>
+                                    <th>순위</th>
+                                    <th>음식점</th>
+                                    <th>카테고리</th>
+                                    <th>방문 횟수</th>
+                                </tr>
+                            </thead>
+                            <tbody id="visit-table-body">
+                                <!-- 데이터가 동적으로 추가됨 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 음식점별 지출 랭킹 -->
+                <div class="stats-section" id="stats-section-spending">
+                    <div class="section-header">
+                        <h3>💸 음식점별 지출 랭킹</h3>
+                    </div>
+                    <div class="stats-table-container">
+                        <table class="stats-table">
+                            <thead>
+                                <tr>
+                                    <th>순위</th>
+                                    <th>음식점</th>
+                                    <th>카테고리</th>
+                                    <th>총 지출액</th>
+                                </tr>
+                            </thead>
+                            <tbody id="spending-table-body">
+                                <!-- 데이터가 동적으로 추가됨 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 내보내기 버튼 -->
+                <div class="export-buttons">
+                    <button class="btn-export" id="export-excel-btn">
+                        📊 Excel 다운로드
+                    </button>
+                    <button class="btn-export" id="export-image-btn">
+                        📸 이미지 저장
+                    </button>
+                </div>
+            </div>
+
+            <!-- 빈 상태 -->
+            <div class="empty-state hidden" id="empty-state">
+                <div class="empty-icon">📊</div>
+                <h2>선택한 기간에 데이터가 없습니다</h2>
+                <p>다른 기간을 선택해주세요.</p>
+            </div>
+        </main>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <!-- 외부 라이브러리 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <!-- 앱 스크립트 -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/stats.js"></script>
+</body>
+</html>
