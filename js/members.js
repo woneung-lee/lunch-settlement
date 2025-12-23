@@ -137,7 +137,7 @@ function createMemberCard(member) {
     card.innerHTML = `
         <div class="card-header">
             <div class="card-icon">${member.isFrequent ? '⭐' : '👤'}</div>
-            ${member.isFrequent ? '<span class="card-badge">자주</span>' : ''}
+            ${member.isFrequent ? '<span class="card-badge">Mate</span>' : ''}
         </div>
         <div class="card-name">${escapeHtml(member.name)}</div>
         <div class="card-info">
