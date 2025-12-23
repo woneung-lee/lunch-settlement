@@ -292,8 +292,8 @@ saveMemberBtn.addEventListener('click', async () => {
                 .collection('members').add(memberData);
         }
         
-        await loadMembers();
         closeMemberModal();
+await loadMembers();
         
     } catch (error) {
         console.error('그룹원 저장 오류:', error);
