@@ -274,6 +274,32 @@ function formatCurrency(amount) {
     return amount.toLocaleString() + '원';
 }
 
+// ===== 금액 입력(쉼표) 처리 헬퍼 =====
+function parseAmount(value) {
+    const raw = String(value || '').replace(/[^\d]/g, ''); // 숫자만 남김(쉼표/공백 제거)
+    return raw ? parseInt(raw, 10) : 0;
+}
+
+function formatAmountInput(inputEl) {
+    const raw = String(inputEl.value || '').replace(/[^\d]/g, '');
+    if (!raw) {
+        inputEl.value = '';
+        return;
+    }
+    inputEl.value = parseInt(raw, 10).toLocaleString();
+}
+
+function bindAmountInput(inputEl) {
+    inputEl.addEventListener('input', () => {
+        formatAmountInput(inputEl);
+        updateTotalAmount();
+    });
+    inputEl.addEventListener('blur', () => {
+        formatAmountInput(inputEl);
+        updateTotalAmount();
+    });
+}
+
 // ===== 이전/다음 달 이동 =====
 prevMonthBtn.addEventListener('click', async () => {
     currentMonth--;
@@ -493,7 +519,7 @@ function addOrderItem(orderData = null) {
                 </div>
                 <div class="form-group">
                     <label>금액</label>
-                    <input type="number" class="order-amount" placeholder="0" value="${orderData?.amount || ''}" min="0">
+<input type="text" inputmode="numeric" class="order-amount" placeholder="0" value="${orderData?.amount != null ? Number(orderData.amount).toLocaleString() : ''}">
                 </div>
             </div>
         </div>
@@ -502,7 +528,7 @@ function addOrderItem(orderData = null) {
     ordersList.appendChild(orderItem);
     
     // 금액 입력 시 합계 업데이트
-    orderItem.querySelector('.order-amount').addEventListener('input', updateTotalAmount);
+bindAmountInput(orderItem.querySelector('.order-amount'));
     
     return orderItem;
 }
@@ -547,7 +573,7 @@ function addSharedItem(sharedData = null) {
                 </div>
                 <div class="form-group">
                     <label>총 금액</label>
-                    <input type="number" class="shared-amount" placeholder="0" value="${sharedData?.amount || ''}" min="0">
+<input type="text" inputmode="numeric" class="shared-amount" placeholder="0" value="${sharedData?.amount != null ? Number(sharedData.amount).toLocaleString() : ''}">
                 </div>
             </div>
             <div class="form-group">
@@ -561,8 +587,9 @@ function addSharedItem(sharedData = null) {
     
     sharedList.appendChild(sharedItem);
     
-    // 금액 입력 시 합계 업데이트
-    sharedItem.querySelector('.shared-amount').addEventListener('input', updateTotalAmount);
+// 금액 입력(쉼표 포맷) + 합계 업데이트
+bindAmountInput(sharedItem.querySelector('.shared-amount'));
+
     
     return sharedItem;
 }
@@ -581,13 +608,13 @@ function updateTotalAmount() {
     
     // 개별 주문 합계
     ordersList.querySelectorAll('.order-amount').forEach(input => {
-        const amount = parseInt(input.value) || 0;
+        const amount = parseAmount(input.value);
         total += amount;
     });
     
     // 공용 메뉴 합계
     sharedList.querySelectorAll('.shared-amount').forEach(input => {
-        const amount = parseInt(input.value) || 0;
+        const amount = parseAmount(input.value);
         total += amount;
     });
     
@@ -643,7 +670,7 @@ saveMealBtn.addEventListener('click', async () => {
     for (let item of orderItems) {
         const memberName = item.querySelector('.order-member').value.trim();
         const menu = item.querySelector('.order-menu').value.trim();
-        const amount = parseInt(item.querySelector('.order-amount').value) || 0;
+        const amount = parseAmount(item.querySelector('.order-amount').value);
         
         if (memberName && menu && amount > 0) {
             orders.push({ memberName, menu, amount });
@@ -669,7 +696,7 @@ saveMealBtn.addEventListener('click', async () => {
     const sharedItems = sharedList.querySelectorAll('.shared-item');
     for (let item of sharedItems) {
         const menu = item.querySelector('.shared-menu').value.trim();
-        const amount = parseInt(item.querySelector('.shared-amount').value) || 0;
+        const amount = parseAmount(item.querySelector('.shared-amount').value);
         const memberCheckboxes = item.querySelectorAll('input[type="checkbox"]:checked');
         const selectedMembers = Array.from(memberCheckboxes).map(cb => cb.value);
         
