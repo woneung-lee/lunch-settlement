@@ -41,6 +41,31 @@ if (!groupId) {
     window.location.href = 'groups.html';
 }
 
+// 하단 네비게이션 이동(그룹ID 유지)
+if (navHome) navHome.addEventListener('click', (e) => {
+    e.preventDefault();
+    window.location.href = `home.html?groupId=${groupId}`;
+});
+if (navRestaurants) navRestaurants.addEventListener('click', (e) => {
+    e.preventDefault();
+    window.location.href = `restaurants.html?groupId=${groupId}`;
+});
+if (navRoulette) navRoulette.addEventListener('click', (e) => {
+    e.preventDefault();
+    window.location.href = `roulette.html?groupId=${groupId}`;
+});
+if (navStats) navStats.addEventListener('click', (e) => {
+    e.preventDefault();
+    window.location.href = `stats.html?groupId=${groupId}`;
+});
+if (navSettings) navSettings.addEventListener('click', (e) => {
+    e.preventDefault();
+    window.location.href = `settings.html?groupId=${groupId}`;
+});
+
+// 현재 페이지 탭 클릭 시 이동 방지(선택사항이지만 UX상 안전)
+if (navMembers) navMembers.addEventListener('click', (e) => e.preventDefault());
+
 // ===== 인증 상태 확인 =====
 auth.onAuthStateChanged(async (user) => {
     if (!user) {
