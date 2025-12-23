@@ -1,7 +1,7 @@
 /* ===== 페이지 레이아웃 ===== */
 .page-container {
     min-height: 100vh;
-    background: linear-gradient(135deg, #FFE5E5 0%, #FFF9F5 50%, #E8F5E9 100%);
+    background: linear-gradient(135deg, #E8F0FE 0%, #F5F7FA 50%, #FFFFFF 100%);
 }
 
 /* ===== 헤더 ===== */
