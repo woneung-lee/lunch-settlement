@@ -567,6 +567,47 @@
     font-size: 20px;
 }
 
+/* ===== 메뉴 모달 ===== */
+.menu-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    border-radius: var(--radius-md);
+    background: var(--bg-white);
+    border: 2px solid var(--border);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    color: var(--text-dark);
+}
+
+.menu-item:hover {
+    border-color: var(--primary);
+    background: #E8F0FE;
+}
+
+.menu-icon {
+    font-size: 24px;
+}
+
+.menu-text {
+    flex: 1;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.menu-arrow {
+    font-size: 20px;
+    color: var(--text-light);
+}
+
 /* ===== 반응형 ===== */
 @media (max-width: 768px) {
     .calendar-container {
