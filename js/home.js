@@ -314,6 +314,17 @@ function formatCurrency(amount) {
     return amount.toLocaleString() + '원';
 }
 
+// 상세보기 모달 등에서 innerHTML 사용 시 XSS 방지용
+function escapeHtml(str) {
+    return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+
 // ===== 금액 입력(쉼표) 처리 헬퍼 =====
 function parseAmount(value) {
     const raw = String(value || '').replace(/[^\d]/g, ''); // 숫자만 남김(쉼표/공백 제거)
