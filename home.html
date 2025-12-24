@@ -158,6 +158,29 @@
         </div>
     </div>
 
+    <!-- 식사 상세보기 모달 -->
+<div class="modal hidden" id="meal-detail-modal">
+    <div class="modal-overlay" id="detail-modal-overlay"></div>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>상세보기</h2>
+            <button class="modal-close" id="detail-modal-close">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="selected-date" id="detail-selected-date">2024년 1월 1일</div>
+
+            <div class="detail-list" id="meal-detail-list">
+                <!-- 예: 홍길동 / 짜장면, 탕수육 / 13,000원 -->
+            </div>
+        </div>
+        <div class="detail-restaurant" id="detail-restaurant-name"></div>
+<div class="detail-total" id="detail-total-amount"></div>
+        <div class="modal-footer">
+            <button class="btn-secondary" id="detail-close-btn">닫기</button>
+        </div>
+    </div>
+</div>
+
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
