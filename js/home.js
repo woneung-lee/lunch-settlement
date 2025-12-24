@@ -156,19 +156,7 @@ async function loadMembers() {
     }
 }
 
-
-// ===== 메이트(자주 먹는 사람) 유틸 =====
-function getMateMembers() {
-    return (members || []).filter(m => m && m.isFrequent === true);
-}
-
-function isMateName(name) {
-    const n = String(name || '').trim();
-    if (!n) return false;
-    return getMateMembers().some(m => String(m.name || '').trim() === n);
-}
-
-// 공용 메뉴에 게스트 추가(방안 A)용 카운터
+// 공용 메뉴에 게스트 추가용 카운터
 let sharedGuestCounter = 0;
 
 function buildGuestCheckboxHtml(sharedId, guestName, checked = true) {
@@ -227,7 +215,6 @@ function addSharedGuest(sharedId) {
 
     updateTotalAmount();
 }
-
 
 // ===== 식사 기록 로드 =====
 async function loadMeals() {
@@ -313,49 +300,48 @@ function createDayElement(date, isOtherMonth, isToday = false) {
     day.appendChild(dayNumber);
     
     // 식사 기록이 있는지 확인
-if (!isOtherMonth) {
-    const dateKey = getDateKey(new Date(currentYear, currentMonth, date));
-    const meal = mealsData[dateKey];
+    if (!isOtherMonth) {
+        const dateKey = getDateKey(new Date(currentYear, currentMonth, date));
+        const meal = mealsData[dateKey];
 
-    // 연필(수정) 버튼: 항상 표시(기록 없으면 "추가"로 동작)
-    const editBtn = document.createElement('button');
-    editBtn.className = 'day-edit-btn';
-    editBtn.type = 'button';
-    editBtn.title = '수정';
-    editBtn.textContent = '✏️';
-    editBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        openMealModal(date);
-    });
-    day.appendChild(editBtn);
-
-    if (meal) {
-        day.classList.add('has-meal');
-        const badge = createDayBadge(meal);
-
-        // 상세보기 버튼: 기록이 있을 때만 표시
-        const detailBtn = document.createElement('button');
-        detailBtn.className = 'day-detail-btn';
-        detailBtn.type = 'button';
-        detailBtn.textContent = '상세보기';
-        detailBtn.addEventListener('click', (e) => {
+        // 연필(수정) 버튼: 항상 표시(기록 없으면 "추가"로 동작)
+        const editBtn = document.createElement('button');
+        editBtn.className = 'day-edit-btn';
+        editBtn.type = 'button';
+        editBtn.title = '수정';
+        editBtn.textContent = '✏️';
+        editBtn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            openMealDetailModal(date);
+            openMealModal(date);
         });
-        badge.appendChild(detailBtn);
+        day.appendChild(editBtn);
 
-        day.appendChild(badge);
+        if (meal) {
+            day.classList.add('has-meal');
+            const badge = createDayBadge(meal);
 
-        // 달력 셀 클릭 = 상세보기
-        day.onclick = () => openMealDetailModal(date);
-    } else {
-        // 기록 없는 날: 달력 셀 클릭 = 추가(기존 흐름 유지)
-        day.onclick = () => openMealModal(date);
+            // 상세보기 버튼: 기록이 있을 때만 표시
+            const detailBtn = document.createElement('button');
+            detailBtn.className = 'day-detail-btn';
+            detailBtn.type = 'button';
+            detailBtn.textContent = '상세보기';
+            detailBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                openMealDetailModal(date);
+            });
+            badge.appendChild(detailBtn);
+
+            day.appendChild(badge);
+
+            // 달력 셀 클릭 = 상세보기
+            day.onclick = () => openMealDetailModal(date);
+        } else {
+            // 기록 없는 날: 달력 셀 클릭 = 추가(기존 흐름 유지)
+            day.onclick = () => openMealModal(date);
+        }
     }
-}
-
     
     return day;
 }
@@ -396,7 +382,6 @@ function escapeHtml(str) {
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
 }
-
 
 // ===== 금액 입력(쉼표) 처리 헬퍼 =====
 function parseAmount(value) {
@@ -506,19 +491,16 @@ function openMealModal(date) {
         deleteMealBtn.classList.add('hidden');
         resetMealForm();
     }
-
-    
     
     selectedDateDisplay.textContent = formatDate(selectedDate);
     mealModal.classList.remove('hidden');
     hideError(mealError);
 
     // 저장/삭제 버튼 상태 초기화(저장 중... 잔상 방지)
-saveMealBtn.disabled = false;
-saveMealBtn.textContent = '저장';
-deleteMealBtn.disabled = false;
-deleteMealBtn.textContent = '삭제';
-    
+    saveMealBtn.disabled = false;
+    saveMealBtn.textContent = '저장';
+    deleteMealBtn.disabled = false;
+    deleteMealBtn.textContent = '삭제';
 }
 
 function closeMealDetailModal() {
@@ -538,19 +520,18 @@ function openMealDetailModal(date) {
     detailSelectedDate.textContent = formatDate(d);
 
     // 음식점명 표시
-const restName = meal.restaurantName || meal.restaurant || '';
-detailRestaurantName.textContent = restName ? `음식점: ${restName}` : '음식점: (미입력)';
+    const restName = meal.restaurantName || meal.restaurant || '';
+    detailRestaurantName.textContent = restName ? `음식점: ${restName}` : '음식점: (미입력)';
 
-// 총합계(전체) 표시: totalAmount가 있으면 우선 사용, 없으면 orders+shared 합산
-let overallTotal = 0;
-if (meal.totalAmount != null) {
-    overallTotal = Number(meal.totalAmount) || 0;
-} else {
-    (meal.orders || []).forEach(o => { overallTotal += Number(o.amount) || 0; });
-    (meal.shared || []).forEach(s => { overallTotal += Number(s.amount) || 0; });
-}
-detailTotalAmount.textContent = `총합계(전체): ${overallTotal.toLocaleString()}원`;
-
+    // 총합계(전체) 표시: totalAmount가 있으면 우선 사용, 없으면 orders+shared 합산
+    let overallTotal = 0;
+    if (meal.totalAmount != null) {
+        overallTotal = Number(meal.totalAmount) || 0;
+    } else {
+        (meal.orders || []).forEach(o => { overallTotal += Number(o.amount) || 0; });
+        (meal.shared || []).forEach(s => { overallTotal += Number(s.amount) || 0; });
+    }
+    detailTotalAmount.textContent = `총합계(전체): ${overallTotal.toLocaleString()}원`;
 
     // 사람별 요약(개별주문 + 공용메뉴 분배) 생성
     const map = new Map(); // name -> { menus:[], total:number }
@@ -624,17 +605,16 @@ detailModalOverlay.addEventListener('click', closeMealDetailModal);
 detailModalClose.addEventListener('click', closeMealDetailModal);
 detailCloseBtn.addEventListener('click', closeMealDetailModal);
 
-
 // ===== 모달 닫기 =====
 function closeMealModal() {
     mealModal.classList.add('hidden');
     resetMealForm();
 
     // 모달 닫을 때도 버튼 상태 초기화
-saveMealBtn.disabled = false;
-saveMealBtn.textContent = '저장';
-deleteMealBtn.disabled = false;
-deleteMealBtn.textContent = '삭제';
+    saveMealBtn.disabled = false;
+    saveMealBtn.textContent = '저장';
+    deleteMealBtn.disabled = false;
+    deleteMealBtn.textContent = '삭제';
 }
 
 modalClose.addEventListener('click', closeMealModal);
@@ -729,6 +709,9 @@ function addOrderItem(orderData = null) {
     orderItem.className = 'order-item';
     orderItem.dataset.orderId = orderCounter;
     
+    // 모든 그룹원을 datalist에 표시
+    const memberOptions = members.map(m => `<option value="${escapeHtml(m.name)}">`).join('');
+    
     orderItem.innerHTML = `
         <div class="order-item-header">
             <span class="item-number">주문 #${orderCounter}</span>
@@ -737,11 +720,11 @@ function addOrderItem(orderData = null) {
         <div class="order-fields">
             <div class="form-group">
                 <label>이름</label>
-                <input type="text" class="order-member" placeholder="메이트를 선택하거나(목록) 이름을 직접 입력" list="mates-list-${orderCounter}" value="${orderData?.memberName || ''}">
-                <datalist id="mates-list-${orderCounter}">
-                    ${getMateMembers().map(m => `<option value="${escapeHtml(m.name)}">`).join('')}
+                <input type="text" class="order-member" placeholder="그룹원을 선택하거나 게스트 이름 입력" list="members-list-${orderCounter}" value="${orderData?.memberName || ''}">
+                <datalist id="members-list-${orderCounter}">
+                    ${memberOptions}
                 </datalist>
-                <div class="order-helper">※ 목록에는 ‘메이트’만 표시됩니다. 메이트가 아닌 경우 이름을 직접 입력해 주십시오.</div>
+                <div class="order-helper">※ 그룹원이 아닌 경우 이름을 직접 입력하세요 (게스트)</div>
             </div>
             <div class="field-row">
                 <div class="form-group">
@@ -750,7 +733,7 @@ function addOrderItem(orderData = null) {
                 </div>
                 <div class="form-group">
                     <label>금액</label>
-<input type="text" inputmode="numeric" class="order-amount" placeholder="0" value="${orderData?.amount != null ? Number(orderData.amount).toLocaleString() : ''}">
+                    <input type="text" inputmode="numeric" class="order-amount" placeholder="0" value="${orderData?.amount != null ? Number(orderData.amount).toLocaleString() : ''}">
                 </div>
             </div>
         </div>
@@ -759,7 +742,7 @@ function addOrderItem(orderData = null) {
     ordersList.appendChild(orderItem);
     
     // 금액 입력 시 합계 업데이트
-bindAmountInput(orderItem.querySelector('.order-amount'));
+    bindAmountInput(orderItem.querySelector('.order-amount'));
     
     return orderItem;
 }
@@ -784,18 +767,17 @@ function addSharedItem(sharedData = null) {
     sharedItem.className = 'shared-item';
     sharedItem.dataset.sharedId = sharedCounter;
     
-    const mateMembers = getMateMembers();
-
-    const memberCheckboxes = mateMembers.map(m => `
+    // 모든 그룹원을 체크박스로 표시
+    const memberCheckboxes = members.map(m => `
         <div class="member-checkbox">
             <input type="checkbox" id="shared-${sharedCounter}-${m.id}" value="${escapeHtml(m.name)}" ${sharedData?.members?.includes(m.name) ? 'checked' : ''}>
             <label for="shared-${sharedCounter}-${m.id}">${escapeHtml(m.name)}</label>
         </div>
     `).join('');
 
-    // 기존 데이터에 '메이트 목록'에 없는 이름이 포함되어 있으면, 게스트로 표시(방안 A)
+    // 기존 데이터에 '그룹원 목록'에 없는 이름이 포함되어 있으면, 게스트로 표시
     const existingMembers = Array.isArray(sharedData?.members) ? sharedData.members : [];
-    const guestNames = existingMembers.filter(nm => !mateMembers.some(m => m.name === nm));
+    const guestNames = existingMembers.filter(nm => !members.some(m => m.name === nm));
 
     const guestCheckboxes = guestNames.map(nm => buildGuestCheckboxHtml(sharedCounter, nm, true)).join('');
     
@@ -812,7 +794,7 @@ function addSharedItem(sharedData = null) {
                 </div>
                 <div class="form-group">
                     <label>총 금액</label>
-<input type="text" inputmode="numeric" class="shared-amount" placeholder="0" value="${sharedData?.amount != null ? Number(sharedData.amount).toLocaleString() : ''}">
+                    <input type="text" inputmode="numeric" class="shared-amount" placeholder="0" value="${sharedData?.amount != null ? Number(sharedData.amount).toLocaleString() : ''}">
                 </div>
             </div>
             <div class="form-group">
@@ -828,9 +810,8 @@ function addSharedItem(sharedData = null) {
     
     sharedList.appendChild(sharedItem);
     
-// 금액 입력(쉼표 포맷) + 합계 업데이트
-bindAmountInput(sharedItem.querySelector('.shared-amount'));
-
+    // 금액 입력(쉼표 포맷) + 합계 업데이트
+    bindAmountInput(sharedItem.querySelector('.shared-amount'));
     
     return sharedItem;
 }
@@ -915,7 +896,6 @@ saveMealBtn.addEventListener('click', async () => {
         
         if (memberName && menu && amount > 0) {
             orders.push({ memberName, menu, amount });
-            // ※ 메이트가 아닌 인원은 '그룹원/메이트'로 자동 등록하지 않음(이름 직접 입력만 허용)
         }
     }
     
@@ -971,12 +951,12 @@ saveMealBtn.addEventListener('click', async () => {
                 .collection('meals').add(mealData);
         }
         
-// 먼저 모달을 닫아 체감 속도 개선(저장은 이미 완료된 상태)
-closeMealModal();
+        // 먼저 모달을 닫아 체감 속도 개선(저장은 이미 완료된 상태)
+        closeMealModal();
 
-// 로딩은 병렬 처리하여 시간 단축
-await Promise.all([loadMembers(), loadMeals()]);
-renderCalendar();
+        // 로딩은 병렬 처리하여 시간 단축
+        await Promise.all([loadMembers(), loadMeals()]);
+        renderCalendar();
         
     } catch (error) {
         console.error('식사 기록 저장 오류:', error);
@@ -1012,4 +992,3 @@ deleteMealBtn.addEventListener('click', async () => {
         deleteMealBtn.textContent = '삭제';
     }
 });
-
