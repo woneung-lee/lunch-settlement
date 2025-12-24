@@ -747,3 +747,19 @@
     color: var(--accent);
 }
 
+/* ===== 상세보기 메타(음식점/총합계) ===== */
+.detail-restaurant {
+    margin: 10px 0 6px;
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--text-dark);
+}
+
+.detail-total {
+    margin: 0 0 14px;
+    font-size: 14px;
+    font-weight: 900;
+    color: var(--primary);
+}
+
+
