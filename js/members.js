@@ -25,7 +25,6 @@ const modalOverlay = document.getElementById('modal-overlay');
 const modalClose = document.getElementById('modal-close');
 const modalTitle = document.getElementById('modal-title');
 const memberNameInput = document.getElementById('member-name');
-const isFrequentCheckbox = document.getElementById('is-frequent');
 const nameError = document.getElementById('name-error');
 const memberError = document.getElementById('member-error');
 const cancelBtn = document.getElementById('cancel-btn');
@@ -105,14 +104,7 @@ async function loadMembers() {
 function renderMembers() {
     membersList.innerHTML = '';
     
-    // 자주 먹는 사람 먼저 정렬
-    const sortedMembers = [...members].sort((a, b) => {
-        if (a.isFrequent && !b.isFrequent) return -1;
-        if (!a.isFrequent && b.isFrequent) return 1;
-        return 0;
-    });
-    
-    sortedMembers.forEach(member => {
+    members.forEach(member => {
         const card = createMemberCard(member);
         membersList.appendChild(card);
     });
@@ -122,9 +114,6 @@ function renderMembers() {
 function createMemberCard(member) {
     const card = document.createElement('div');
     card.className = 'member-card';
-    if (member.isFrequent) {
-        card.classList.add('frequent');
-    }
     card.onclick = () => openMemberModal(member.id);
     
     const createdDate = member.createdAt ? 
@@ -136,8 +125,7 @@ function createMemberCard(member) {
     
     card.innerHTML = `
         <div class="card-header">
-            <div class="card-icon">${member.isFrequent ? '⭐' : '👤'}</div>
-            ${member.isFrequent ? '<span class="card-badge">Mate</span>' : ''}
+            <div class="card-icon">👤</div>
         </div>
         <div class="card-name">${escapeHtml(member.name)}</div>
         <div class="card-info">
@@ -181,7 +169,6 @@ function openMemberModal(memberId = null) {
         deleteMemberBtn.classList.remove('hidden');
         
         memberNameInput.value = member.name;
-        isFrequentCheckbox.checked = member.isFrequent;
     } else {
         // 새 그룹원 추가
         editingMemberId = null;
@@ -189,13 +176,12 @@ function openMemberModal(memberId = null) {
         deleteMemberBtn.classList.add('hidden');
         
         memberNameInput.value = '';
-        isFrequentCheckbox.checked = false;
 
         // 저장/삭제 버튼 상태 초기화(저장 중... 잔상 방지)
-saveMemberBtn.disabled = false;
-saveMemberBtn.textContent = '저장';
-deleteMemberBtn.disabled = false;
-deleteMemberBtn.textContent = '삭제';
+        saveMemberBtn.disabled = false;
+        saveMemberBtn.textContent = '저장';
+        deleteMemberBtn.disabled = false;
+        deleteMemberBtn.textContent = '삭제';
     }
     
     memberModal.classList.remove('hidden');
@@ -209,10 +195,10 @@ function closeMemberModal() {
     memberModal.classList.add('hidden');
     
     // 모달 닫을 때도 버튼 상태 초기화
-saveMemberBtn.disabled = false;
-saveMemberBtn.textContent = '저장';
-deleteMemberBtn.disabled = false;
-deleteMemberBtn.textContent = '삭제';
+    saveMemberBtn.disabled = false;
+    saveMemberBtn.textContent = '저장';
+    deleteMemberBtn.disabled = false;
+    deleteMemberBtn.textContent = '삭제';
 }
 
 modalClose.addEventListener('click', closeMemberModal);
@@ -248,7 +234,6 @@ saveMemberBtn.addEventListener('click', async () => {
     hideError(memberError);
     
     const name = memberNameInput.value.trim();
-    const isFrequent = isFrequentCheckbox.checked;
     
     // 유효성 검사
     if (!name) {
@@ -277,7 +262,6 @@ saveMemberBtn.addEventListener('click', async () => {
     try {
         const memberData = {
             name: name,
-            isFrequent: isFrequent,
             updatedAt: timestamp()
         };
         
@@ -293,7 +277,7 @@ saveMemberBtn.addEventListener('click', async () => {
         }
         
         closeMemberModal();
-await loadMembers();
+        await loadMembers();
         
     } catch (error) {
         console.error('그룹원 저장 오류:', error);
