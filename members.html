@@ -34,8 +34,8 @@
             <div class="members-container hidden" id="members-container">
                 <!-- 안내 메시지 -->
                 <div class="info-box">
-                    <p>💡 그룹원은 식사 기록 입력 시 자동으로 추가되지만, 여기서 미리 등록할 수도 있습니다.</p>
-                    <p>⭐ 식사메이트로 표시하면 빠른 입력이 가능합니다.</p>
+                    <p>💡 그룹원을 미리 등록하면 식사 기록 입력 시 빠르게 선택할 수 있습니다.</p>
+                    <p>🎯 등록하지 않은 사람은 게스트로 당일 이름을 직접 입력하세요.</p>
                 </div>
 
                 <!-- 그룹원 리스트 -->
@@ -49,33 +49,33 @@
         <button class="fab" id="fab-btn">
             <span class="fab-icon">+</span>
         </button>
-<nav class="bottom-nav">
-    <a href="#" class="nav-item" id="nav-home">
-        <span class="nav-icon">📅</span>
-        <span class="nav-label">홈</span>
-    </a>
-    <a href="#" class="nav-item active" id="nav-members">
-        <span class="nav-icon">👥</span>
-        <span class="nav-label">그룹원</span>
-    </a>
-    <a href="#" class="nav-item" id="nav-restaurants">
-        <span class="nav-icon">🍽️</span>
-        <span class="nav-label">음식점</span>
-    </a>
-    <a href="#" class="nav-item" id="nav-roulette">
-        <span class="nav-icon">🎰</span>
-        <span class="nav-label">룰렛</span>
-    </a>
-    <a href="#" class="nav-item" id="nav-stats">
-        <span class="nav-icon">📊</span>
-        <span class="nav-label">통계</span>
-    </a>
-    <a href="#" class="nav-item" id="nav-settings">
-        <span class="nav-icon">⚙️</span>
-        <span class="nav-label">설정</span>
-    </a>
-</nav>
         
+        <nav class="bottom-nav">
+            <a href="#" class="nav-item" id="nav-home">
+                <span class="nav-icon">📅</span>
+                <span class="nav-label">홈</span>
+            </a>
+            <a href="#" class="nav-item active" id="nav-members">
+                <span class="nav-icon">👥</span>
+                <span class="nav-label">그룹원</span>
+            </a>
+            <a href="#" class="nav-item" id="nav-restaurants">
+                <span class="nav-icon">🍽️</span>
+                <span class="nav-label">음식점</span>
+            </a>
+            <a href="#" class="nav-item" id="nav-roulette">
+                <span class="nav-icon">🎰</span>
+                <span class="nav-label">룰렛</span>
+            </a>
+            <a href="#" class="nav-item" id="nav-stats">
+                <span class="nav-icon">📊</span>
+                <span class="nav-label">통계</span>
+            </a>
+            <a href="#" class="nav-item" id="nav-settings">
+                <span class="nav-icon">⚙️</span>
+                <span class="nav-label">설정</span>
+            </a>
+        </nav>
     </div>
 
     <!-- 그룹원 추가/수정 모달 -->
@@ -92,13 +92,6 @@
                     <input type="text" id="member-name" placeholder="이름을 입력하세요" maxlength="20">
                     <div class="input-hint">최대 20자</div>
                     <div class="error-message" id="name-error"></div>
-                </div>
-
-                <div class="form-group">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="is-frequent">
-                        <span>⭐ 식사메이트로 표시</span>
-                    </label>
                 </div>
 
                 <div class="error-message" id="member-error"></div>
