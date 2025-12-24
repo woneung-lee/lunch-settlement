@@ -748,6 +748,15 @@
 }
 
 /* ===== 상세보기 메타(음식점/총합계) ===== */
+.detail-restaurant,
+.detail-total {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 0 6px;          /* 좌우 여백 확보(잘림 방지) */
+    overflow-wrap: anywhere; /* 긴 텍스트도 잘리지 않게 줄바꿈 */
+    word-break: break-word;
+}
+
 .detail-restaurant {
     margin: 10px 0 6px;
     font-size: 14px;
@@ -761,5 +770,6 @@
     font-weight: 900;
     color: var(--primary);
 }
+
 
 
