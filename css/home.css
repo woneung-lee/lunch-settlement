@@ -668,3 +668,82 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* ===== 달력 셀 액션(수정/상세보기) ===== */
+.calendar-day {
+    position: relative;
+}
+
+.day-edit-btn {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg-white);
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+}
+
+.day-edit-btn:hover {
+    background: var(--bg-main);
+    border-color: var(--text-medium);
+}
+
+.day-detail-btn {
+    margin-top: 6px;
+    width: 100%;
+    padding: 6px 8px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg-white);
+    color: var(--text-dark);
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.day-detail-btn:hover {
+    background: var(--bg-main);
+}
+
+/* ===== 상세보기 리스트 ===== */
+.detail-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.detail-row {
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--bg-white);
+    font-size: 14px;
+    color: var(--text-dark);
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.detail-row .left {
+    min-width: 0;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.detail-row .right {
+    white-space: nowrap;
+    font-weight: 800;
+    color: var(--accent);
+}
+
