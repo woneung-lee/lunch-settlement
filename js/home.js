@@ -35,6 +35,8 @@ const detailModalClose = document.getElementById('detail-modal-close');
 const detailCloseBtn = document.getElementById('detail-close-btn');
 const detailSelectedDate = document.getElementById('detail-selected-date');
 const mealDetailList = document.getElementById('meal-detail-list');
+const detailRestaurantName = document.getElementById('detail-restaurant-name');
+const detailTotalAmount = document.getElementById('detail-total-amount');
 const modalOverlay = document.getElementById('modal-overlay');
 const modalClose = document.getElementById('modal-close');
 const modalTitle = document.getElementById('modal-title');
@@ -450,6 +452,21 @@ function openMealDetailModal(date) {
     }
 
     detailSelectedDate.textContent = formatDate(d);
+
+    // 음식점명 표시
+const restName = meal.restaurantName || meal.restaurant || '';
+detailRestaurantName.textContent = restName ? `음식점: ${restName}` : '음식점: (미입력)';
+
+// 총합계(전체) 표시: totalAmount가 있으면 우선 사용, 없으면 orders+shared 합산
+let overallTotal = 0;
+if (meal.totalAmount != null) {
+    overallTotal = Number(meal.totalAmount) || 0;
+} else {
+    (meal.orders || []).forEach(o => { overallTotal += Number(o.amount) || 0; });
+    (meal.shared || []).forEach(s => { overallTotal += Number(s.amount) || 0; });
+}
+detailTotalAmount.textContent = `총합계(전체): ${overallTotal.toLocaleString()}원`;
+
 
     // 사람별 요약(개별주문 + 공용메뉴 분배) 생성
     const map = new Map(); // name -> { menus:[], total:number }
