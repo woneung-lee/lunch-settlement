@@ -215,11 +215,10 @@ createGroupBtn.addEventListener('click', async () => {
             updatedAt: timestamp()
         });
         
-        // 총무를 그룹원으로 자동 추가
+        // 총무를 그룹원으로 자동 추가 (isFrequent 제거)
         const userId = currentUser.userData?.userId || currentUser.email.split('@')[0];
         await db.collection('groups').doc(groupRef.id).collection('members').add({
             name: userId,
-            isFrequent: true,
             createdAt: timestamp()
         });
         
