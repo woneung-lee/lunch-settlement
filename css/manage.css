@@ -183,11 +183,6 @@
     box-shadow: var(--shadow-md);
 }
 
-.member-card.frequent {
-    border-color: var(--accent);
-    background: linear-gradient(135deg, #FFF9F5 0%, #FFFFFF 100%);
-}
-
 .card-header {
     display: flex;
     justify-content: space-between;
@@ -204,19 +199,6 @@
     align-items: center;
     justify-content: center;
     font-size: 24px;
-}
-
-.member-card.frequent .card-icon {
-    background: linear-gradient(135deg, #FF6B35 0%, #FFB347 100%);
-}
-
-.card-badge {
-    padding: 4px 8px;
-    background: var(--accent);
-    color: white;
-    font-size: 11px;
-    font-weight: 700;
-    border-radius: var(--radius-sm);
 }
 
 .card-name {
@@ -431,26 +413,6 @@
     outline: none;
     border-color: var(--primary);
     box-shadow: 0 0 0 4px rgba(0, 102, 204, 0.1);
-}
-
-.checkbox-label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    user-select: none;
-}
-
-.checkbox-label input[type="checkbox"] {
-    width: 20px;
-    height: 20px;
-    cursor: pointer;
-}
-
-.checkbox-label span {
-    font-size: 15px;
-    color: var(--text-dark);
-    font-weight: 600;
 }
 
 /* ===== 반응형 ===== */
