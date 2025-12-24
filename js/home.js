@@ -28,6 +28,13 @@ const navSettings = document.getElementById('nav-settings');
 
 // 모달 요소
 const mealModal = document.getElementById('meal-modal');
+// 상세보기 모달
+const mealDetailModal = document.getElementById('meal-detail-modal');
+const detailModalOverlay = document.getElementById('detail-modal-overlay');
+const detailModalClose = document.getElementById('detail-modal-close');
+const detailCloseBtn = document.getElementById('detail-close-btn');
+const detailSelectedDate = document.getElementById('detail-selected-date');
+const mealDetailList = document.getElementById('meal-detail-list');
 const modalOverlay = document.getElementById('modal-overlay');
 const modalClose = document.getElementById('modal-close');
 const modalTitle = document.getElementById('modal-title');
@@ -231,18 +238,49 @@ function createDayElement(date, isOtherMonth, isToday = false) {
     day.appendChild(dayNumber);
     
     // 식사 기록이 있는지 확인
-    if (!isOtherMonth) {
-        const dateKey = getDateKey(new Date(currentYear, currentMonth, date));
-        const meal = mealsData[dateKey];
-        
-        if (meal) {
-            day.classList.add('has-meal');
-            const badge = createDayBadge(meal);
-            day.appendChild(badge);
-        }
-        
+if (!isOtherMonth) {
+    const dateKey = getDateKey(new Date(currentYear, currentMonth, date));
+    const meal = mealsData[dateKey];
+
+    // 연필(수정) 버튼: 항상 표시(기록 없으면 "추가"로 동작)
+    const editBtn = document.createElement('button');
+    editBtn.className = 'day-edit-btn';
+    editBtn.type = 'button';
+    editBtn.title = '수정';
+    editBtn.textContent = '✏️';
+    editBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        openMealModal(date);
+    });
+    day.appendChild(editBtn);
+
+    if (meal) {
+        day.classList.add('has-meal');
+        const badge = createDayBadge(meal);
+
+        // 상세보기 버튼: 기록이 있을 때만 표시
+        const detailBtn = document.createElement('button');
+        detailBtn.className = 'day-detail-btn';
+        detailBtn.type = 'button';
+        detailBtn.textContent = '상세보기';
+        detailBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            openMealDetailModal(date);
+        });
+        badge.appendChild(detailBtn);
+
+        day.appendChild(badge);
+
+        // 달력 셀 클릭 = 상세보기
+        day.onclick = () => openMealDetailModal(date);
+    } else {
+        // 기록 없는 날: 달력 셀 클릭 = 추가(기존 흐름 유지)
         day.onclick = () => openMealModal(date);
     }
+}
+
     
     return day;
 }
@@ -382,6 +420,8 @@ function openMealModal(date) {
         deleteMealBtn.classList.add('hidden');
         resetMealForm();
     }
+
+    
     
     selectedDateDisplay.textContent = formatDate(selectedDate);
     mealModal.classList.remove('hidden');
@@ -394,6 +434,95 @@ deleteMealBtn.disabled = false;
 deleteMealBtn.textContent = '삭제';
     
 }
+
+function closeMealDetailModal() {
+    mealDetailModal.classList.add('hidden');
+}
+
+function openMealDetailModal(date) {
+    const d = new Date(currentYear, currentMonth, date);
+    const dateKey = getDateKey(d);
+    const meal = mealsData[dateKey];
+
+    if (!meal) {
+        alert('해당 날짜에 기록이 없습니다.');
+        return;
+    }
+
+    detailSelectedDate.textContent = formatDate(d);
+
+    // 사람별 요약(개별주문 + 공용메뉴 분배) 생성
+    const map = new Map(); // name -> { menus:[], total:number }
+
+    const addLine = (name, menu, amount) => {
+        const key = name || '미지정';
+        if (!map.has(key)) map.set(key, { menus: [], total: 0 });
+        const obj = map.get(key);
+
+        if (menu) obj.menus.push(menu);
+        obj.total += (amount || 0);
+    };
+
+    // 개별 주문
+    (meal.orders || []).forEach(o => {
+        addLine(o.memberName, o.menu, o.amount || 0);
+    });
+
+    // 공용 메뉴: 참여자에게 1원 단위로 나눠 배분(총액 보존)
+    (meal.shared || []).forEach(s => {
+        const menu = s.menu || '(공용)';
+        const total = s.amount || 0;
+        const members = Array.isArray(s.members) ? s.members : [];
+        const n = members.length;
+
+        if (n <= 0) {
+            addLine('공용', menu, total);
+            return;
+        }
+
+        const base = Math.floor(total / n);
+        const rem = total - (base * n);
+
+        members.forEach((mName, idx) => {
+            const pay = base + (idx < rem ? 1 : 0);
+            addLine(mName, menu, pay);
+        });
+    });
+
+    // 출력
+    mealDetailList.innerHTML = '';
+    if (map.size === 0) {
+        mealDetailList.innerHTML = '<div class="detail-row"><div class="left">기록이 없습니다.</div><div class="right"></div></div>';
+    } else {
+        for (const [name, info] of map.entries()) {
+            // 메뉴 중복 제거(순서 유지)
+            const menus = [];
+            const seen = new Set();
+            (info.menus || []).forEach(m => {
+                if (!m) return;
+                if (seen.has(m)) return;
+                seen.add(m);
+                menus.push(m);
+            });
+
+            const leftText = `${name} / ${menus.join(', ') || '(메뉴 없음)'}`;
+            const rightText = `${Number(info.total || 0).toLocaleString()}원`;
+
+            const row = document.createElement('div');
+            row.className = 'detail-row';
+            row.innerHTML = `<div class="left">${escapeHtml(leftText)}</div><div class="right">${rightText}</div>`;
+            mealDetailList.appendChild(row);
+        }
+    }
+
+    mealDetailModal.classList.remove('hidden');
+}
+
+// 상세보기 닫기 이벤트
+detailModalOverlay.addEventListener('click', closeMealDetailModal);
+detailModalClose.addEventListener('click', closeMealDetailModal);
+detailCloseBtn.addEventListener('click', closeMealDetailModal);
+
 
 // ===== 모달 닫기 =====
 function closeMealModal() {
