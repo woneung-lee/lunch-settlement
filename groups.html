@@ -40,6 +40,21 @@
 
             <!-- 그룹 목록 -->
             <div class="groups-container hidden" id="groups-container">
+                
+                <!-- 받은 초대 -->
+                <section class="invitations-section hidden" id="invitations-section">
+                    <div class="section-header">
+                        <h2>받은 초대</h2>
+                        <span class="count-badge hidden" id="invitation-count"></span>
+                    </div>
+                    <div class="invitations-list" id="invitations-list"></div>
+                </section>
+
+                <!-- 그룹이 없는 경우(초대는 있을 수 있음) -->
+                <div class="no-groups-message hidden" id="no-groups-message">
+                    <p>참여 중인 그룹이 없습니다.</p>
+                </div>
+
                 <div class="groups-grid" id="groups-grid">
                     <!-- 그룹 카드들이 동적으로 추가됨 -->
                 </div>
@@ -119,3 +134,4 @@
     <script src="js/groups.js"></script>
 </body>
 </html>
+
