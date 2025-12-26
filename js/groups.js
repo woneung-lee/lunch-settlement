@@ -416,3 +416,29 @@ groupNameInput.addEventListener('keypress', (e) => {
         createGroupBtn.click();
     }
 });
+
+// ⭐⭐⭐ Phase 4: 탭 전환 로직 추가 ⭐⭐⭐
+const tabBtns = document.querySelectorAll('.tab-btn');
+const tabContents = document.querySelectorAll('.tab-content');
+
+tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        const targetTab = btn.getAttribute('data-tab');
+        
+        // 모든 탭 버튼 비활성화
+        tabBtns.forEach(b => b.classList.remove('active'));
+        
+        // 클릭한 탭 버튼 활성화
+        btn.classList.add('active');
+        
+        // 모든 탭 컨텐츠 숨김
+        tabContents.forEach(content => content.classList.remove('active'));
+        
+        // 선택한 탭 컨텐츠 표시
+        if (targetTab === 'my-groups') {
+            document.getElementById('my-groups-tab').classList.add('active');
+        } else if (targetTab === 'branch-restaurants') {
+            document.getElementById('branch-restaurants-tab').classList.add('active');
+        }
+    });
+});
