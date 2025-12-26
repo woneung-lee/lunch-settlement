@@ -80,12 +80,30 @@
                     <div class="error-message" id="group-name-error"></div>
                 </div>
             </div>
+
+            <!-- 지점 선택 -->
+                <div class="form-group">
+                    <label for="branch-search">소속 지점</label>
+                    <input type="text" id="branch-search" placeholder="지점명 검색 (예: 마포, 본점)" autocomplete="off">
+                    <div class="input-hint">검색 후 선택하세요</div>
+                    
+                    <div class="selected-branch hidden" id="selected-branch">
+                        <span id="selected-branch-name"></span>
+                        <button type="button" class="btn-change" id="change-branch-btn">변경</button>
+                    </div>
+                    
+                    <div class="branch-search-results hidden" id="branch-search-results"></div>
+                    <div class="error-message" id="branch-error"></div>
+                </div>
+            
             <div class="modal-footer">
                 <button class="btn-secondary" id="cancel-btn">취소</button>
                 <button class="btn-primary" id="create-group-btn">만들기</button>
             </div>
         </div>
     </div>
+
+    
 
     <!-- 초대 목록 모달 -->
     <div class="modal hidden" id="invitations-modal">
