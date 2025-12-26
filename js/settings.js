@@ -725,3 +725,4 @@ backBtn.addEventListener('click', () => {
     window.location.href = `home.html?groupId=${groupId}`;
 });
 
+
