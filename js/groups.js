@@ -60,14 +60,20 @@ auth.onAuthStateChanged(async (user) => {
 // ===== 지점 목록 로드 =====
 async function loadBranches() {
     try {
+        // 2개 이상 orderBy는 복합 인덱스가 필요할 수 있으므로, 1차 조회 후 클라이언트 정렬
         const snapshot = await db.collection('branches')
             .orderBy('level')
-            .orderBy('name')
             .get();
         
         branches = [];
-        snapshot.forEach(doc => {
-            branches.push({ id: doc.id, ...doc.data() });
+        snapshot.forEach(doc => branches.push({ id: doc.id, ...doc.data() }));
+
+        // 동일 level 내에서는 이름순 정렬
+        branches.sort((a, b) => {
+            const la = a.level ?? 0;
+            const lb = b.level ?? 0;
+            if (la !== lb) return la - lb;
+            return String(a.name || '').localeCompare(String(b.name || ''), 'ko');
         });
         
         console.log(`✅ 지점 목록 로드 완료: ${branches.length}개`);
@@ -205,9 +211,9 @@ async function loadGroups() {
     try {
         showLoading();
         
+        // 복합 인덱스 요구를 피하기 위해(WHERE + ORDERBY), 클라이언트에서 정렬
         const snapshot = await db.collection('groups')
             .where('ownerId', '==', currentUser.uid)
-            .orderBy('createdAt', 'desc')
             .get();
         
         if (snapshot.empty) {
@@ -217,8 +223,15 @@ async function loadGroups() {
         
         groupsGrid.innerHTML = '';
         
-        snapshot.forEach(doc => {
-            const group = { id: doc.id, ...doc.data() };
+        const groups = [];
+        snapshot.forEach(doc => groups.push({ id: doc.id, ...doc.data() }));
+        groups.sort((a, b) => {
+            const at = a.createdAt?.toMillis?.() || 0;
+            const bt = b.createdAt?.toMillis?.() || 0;
+            return bt - at; // 최신순
+        });
+
+        groups.forEach(group => {
             const card = createGroupCard(group);
             groupsGrid.appendChild(card);
         });
@@ -387,9 +400,23 @@ createGroupBtn.addEventListener('click', async () => {
             createdAt: timestamp(),
             updatedAt: timestamp()
         });
+
+        // 방 멤버십(권한) 생성: 방장은 owner
+        // settings.html 등에서 그룹 접근 권한은 groupMembers 기준으로 판단함
+        const ownerUserId = currentUser.userData?.userId || currentUser.email.split('@')[0];
+        await db.collection('groups').doc(groupRef.id)
+            .collection('groupMembers')
+            .doc(currentUser.uid)
+            .set({
+                role: 'owner',
+                userId: ownerUserId,
+                email: currentUser.email,
+                joinedAt: timestamp(),
+                updatedAt: timestamp()
+            });
         
         // 총무를 그룹원으로 자동 추가
-        const userId = currentUser.userData?.userId || currentUser.email.split('@')[0];
+        const userId = ownerUserId;
         await db.collection('groups').doc(groupRef.id).collection('members').add({
             name: userId,
             createdAt: timestamp()
@@ -416,3 +443,4 @@ groupNameInput.addEventListener('keypress', (e) => {
         createGroupBtn.click();
     }
 });
+
