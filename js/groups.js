@@ -16,13 +16,24 @@ const groupNameError = document.getElementById('group-name-error');
 const cancelBtn = document.getElementById('cancel-btn');
 const createGroupBtn = document.getElementById('create-group-btn');
 
+// 지점 선택 요소
+const branchSearchInput = document.getElementById('branch-search');
+const branchSearchResults = document.getElementById('branch-search-results');
+const branchList = document.getElementById('branch-list');
+const selectedBranch = document.getElementById('selected-branch');
+const selectedBranchName = document.getElementById('selected-branch-name');
+const selectedBranchParent = document.getElementById('selected-branch-parent');
+const changeBranchBtn = document.getElementById('change-branch-btn');
+const branchError = document.getElementById('branch-error');
+
 // ===== 전역 변수 =====
 let currentUser = null;
+let branches = [];
+let selectedBranchData = null;
 
 // ===== 인증 상태 확인 =====
 auth.onAuthStateChanged(async (user) => {
     if (!user) {
-        // 로그인하지 않은 경우 로그인 페이지로 이동
         window.location.href = 'index.html';
         return;
     }
@@ -39,8 +50,143 @@ auth.onAuthStateChanged(async (user) => {
         console.error('사용자 정보 로드 오류:', error);
     }
     
+    // 지점 목록 로드
+    await loadBranches();
+    
     // 그룹 목록 로드
     loadGroups();
+});
+
+// ===== 지점 목록 로드 =====
+async function loadBranches() {
+    try {
+        const snapshot = await db.collection('branches')
+            .orderBy('level')
+            .orderBy('name')
+            .get();
+        
+        branches = [];
+        snapshot.forEach(doc => {
+            branches.push({ id: doc.id, ...doc.data() });
+        });
+        
+        console.log(`✅ 지점 목록 로드 완료: ${branches.length}개`);
+    } catch (error) {
+        console.error('지점 목록 로드 오류:', error);
+        alert('지점 목록을 불러오는 중 오류가 발생했습니다.');
+    }
+}
+
+// ===== 지점 검색 =====
+branchSearchInput.addEventListener('input', () => {
+    const query = branchSearchInput.value.trim();
+    
+    if (!query) {
+        branchSearchResults.classList.add('hidden');
+        return;
+    }
+    
+    searchBranches(query);
+});
+
+branchSearchInput.addEventListener('focus', () => {
+    const query = branchSearchInput.value.trim();
+    if (query) {
+        searchBranches(query);
+    } else {
+        // 포커스 시 전체 목록 표시
+        showAllSelectableBranches();
+    }
+});
+
+function searchBranches(query) {
+    const lowerQuery = query.toLowerCase();
+    
+    // 검색: 이름, 상위 조직명에서 검색 (선택 가능한 것만)
+    const results = branches.filter(branch => {
+        if (!branch.selectable) return false;
+        
+        const nameMatch = branch.name.toLowerCase().includes(lowerQuery);
+        const parentMatch = branch.parentName && branch.parentName.toLowerCase().includes(lowerQuery);
+        const pathMatch = branch.fullPath && branch.fullPath.toLowerCase().includes(lowerQuery);
+        
+        return nameMatch || parentMatch || pathMatch;
+    });
+    
+    renderBranchResults(results);
+}
+
+function showAllSelectableBranches() {
+    const selectableBranches = branches.filter(b => b.selectable);
+    renderBranchResults(selectableBranches);
+}
+
+function renderBranchResults(results) {
+    branchList.innerHTML = '';
+    
+    if (results.length === 0) {
+        branchList.innerHTML = '<div class="no-results">검색 결과가 없습니다</div>';
+        branchSearchResults.classList.remove('hidden');
+        return;
+    }
+    
+    // 본점을 맨 위에
+    const headquarters = results.filter(b => b.level === 0);
+    const others = results.filter(b => b.level !== 0);
+    
+    const sortedResults = [...headquarters, ...others];
+    
+    sortedResults.forEach(branch => {
+        const item = createBranchItem(branch);
+        branchList.appendChild(item);
+    });
+    
+    branchSearchResults.classList.remove('hidden');
+}
+
+function createBranchItem(branch) {
+    const item = document.createElement('div');
+    item.className = 'branch-item';
+    
+    if (branch.level === 0) {
+        item.classList.add('headquarters');
+    }
+    
+    item.innerHTML = `
+        <span class="branch-item-name">
+            ${escapeHtml(branch.name)}
+            <span class="branch-item-type">${escapeHtml(branch.type)}</span>
+        </span>
+        ${branch.level !== 0 ? `<span class="branch-item-path">${escapeHtml(branch.parentName)}</span>` : '<span class="branch-item-path">최상위 조직</span>'}
+    `;
+    
+    item.addEventListener('click', () => {
+        selectBranch(branch);
+    });
+    
+    return item;
+}
+
+function selectBranch(branch) {
+    selectedBranchData = branch;
+    
+    // UI 업데이트
+    selectedBranchName.textContent = branch.name;
+    selectedBranchParent.textContent = branch.level === 0 ? '최상위 조직' : branch.parentName;
+    
+    selectedBranch.classList.remove('hidden');
+    branchSearchInput.value = branch.name;
+    branchSearchResults.classList.add('hidden');
+    
+    hideError(branchError);
+}
+
+// ===== 지점 변경 버튼 =====
+changeBranchBtn.addEventListener('click', () => {
+    selectedBranchData = null;
+    selectedBranch.classList.add('hidden');
+    branchSearchInput.value = '';
+    branchSearchInput.focus();
 });
 
 // ===== 로그아웃 =====
@@ -59,7 +205,6 @@ async function loadGroups() {
     try {
         showLoading();
         
-        // 현재 사용자가 소유한 그룹 조회
         const snapshot = await db.collection('groups')
             .where('ownerId', '==', currentUser.uid)
             .orderBy('createdAt', 'desc')
@@ -70,7 +215,6 @@ async function loadGroups() {
             return;
         }
         
-        // 그룹 카드 렌더링
         groupsGrid.innerHTML = '';
         
         snapshot.forEach(doc => {
@@ -94,7 +238,6 @@ function createGroupCard(group) {
     card.className = 'group-card';
     card.onclick = () => openGroup(group.id);
     
-    // 생성일 포맷팅
     const createdDate = group.createdAt ? 
         new Date(group.createdAt.toDate()).toLocaleDateString('ko-KR', { 
             year: 'numeric', 
@@ -107,6 +250,12 @@ function createGroupCard(group) {
             <div class="group-icon">🍱</div>
         </div>
         <div class="group-name">${escapeHtml(group.groupName)}</div>
+        ${group.branchName ? `
+        <div class="group-branch">
+            <span class="group-branch-icon">📍</span>
+            <span>${escapeHtml(group.branchName)}</span>
+        </div>
+        ` : ''}
         <div class="group-info">
             <div class="group-info-item">
                 <span class="group-info-icon">📅</span>
@@ -151,16 +300,28 @@ function showGroupsList() {
 
 // ===== 모달 열기/닫기 =====
 function openModal() {
+    // 초기화
+    selectedBranchData = null;
+    selectedBranch.classList.add('hidden');
+    branchSearchInput.value = '';
+    branchSearchResults.classList.add('hidden');
+    
     createGroupModal.classList.remove('hidden');
     groupNameInput.value = '';
     groupNameInput.focus();
     hideError(groupNameError);
+    hideError(branchError);
 }
 
 function closeModal() {
     createGroupModal.classList.add('hidden');
     groupNameInput.value = '';
+    branchSearchInput.value = '';
+    selectedBranchData = null;
+    selectedBranch.classList.add('hidden');
+    branchSearchResults.classList.add('hidden');
     hideError(groupNameError);
+    hideError(branchError);
 }
 
 // 이벤트 리스너
@@ -192,7 +353,7 @@ function hideError(element) {
 createGroupBtn.addEventListener('click', async () => {
     const groupName = groupNameInput.value.trim();
     
-    // 유효성 검사
+    // 그룹명 검증
     if (!groupName) {
         showError(groupNameError, '그룹 이름을 입력해주세요.');
         return;
@@ -200,6 +361,13 @@ createGroupBtn.addEventListener('click', async () => {
     
     if (groupName.length > 30) {
         showError(groupNameError, '그룹 이름은 최대 30자까지 가능합니다.');
+        return;
+    }
+    
+    // 지점 선택 검증
+    if (!selectedBranchData) {
+        showError(branchError, '소속 조직을 선택해주세요.');
+        branchSearchInput.focus();
         return;
     }
     
@@ -211,11 +379,16 @@ createGroupBtn.addEventListener('click', async () => {
         const groupRef = await db.collection('groups').add({
             groupName: groupName,
             ownerId: currentUser.uid,
+            branchId: selectedBranchData.id,
+            branchName: selectedBranchData.name,
+            branchType: selectedBranchData.type,
+            branchLevel: selectedBranchData.level,
+            branchFullPath: selectedBranchData.fullPath,
             createdAt: timestamp(),
             updatedAt: timestamp()
         });
         
-        // 총무를 그룹원으로 자동 추가 (isFrequent 제거)
+        // 총무를 그룹원으로 자동 추가
         const userId = currentUser.userData?.userId || currentUser.email.split('@')[0];
         await db.collection('groups').doc(groupRef.id).collection('members').add({
             name: userId,
@@ -239,7 +412,7 @@ createGroupBtn.addEventListener('click', async () => {
 
 // Enter 키로 그룹 생성
 groupNameInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' && selectedBranchData) {
         createGroupBtn.click();
     }
 });
