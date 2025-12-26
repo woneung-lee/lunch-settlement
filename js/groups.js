@@ -7,6 +7,16 @@ const emptyState = document.getElementById('empty-state');
 const groupsContainer = document.getElementById('groups-container');
 const groupsGrid = document.getElementById('groups-grid');
 
+// 초대 알림 요소
+const invitationsBtn = document.getElementById('invitations-btn');
+const invitationBadge = document.getElementById('invitation-badge');
+const invitationsModal = document.getElementById('invitations-modal');
+const invitationsModalOverlay = document.getElementById('invitations-modal-overlay');
+const invitationsModalClose = document.getElementById('invitations-modal-close');
+const closeInvitationsBtn = document.getElementById('close-invitations-btn');
+const invitationsList = document.getElementById('invitations-list');
+const emptyInvitations = document.getElementById('empty-invitations');
+
 // 모달 요소
 const createGroupModal = document.getElementById('create-group-modal');
 const modalOverlay = document.getElementById('modal-overlay');
@@ -16,20 +26,9 @@ const groupNameError = document.getElementById('group-name-error');
 const cancelBtn = document.getElementById('cancel-btn');
 const createGroupBtn = document.getElementById('create-group-btn');
 
-// 지점 선택 요소
-const branchSearchInput = document.getElementById('branch-search');
-const branchSearchResults = document.getElementById('branch-search-results');
-const branchList = document.getElementById('branch-list');
-const selectedBranch = document.getElementById('selected-branch');
-const selectedBranchName = document.getElementById('selected-branch-name');
-const selectedBranchParent = document.getElementById('selected-branch-parent');
-const changeBranchBtn = document.getElementById('change-branch-btn');
-const branchError = document.getElementById('branch-error');
-
 // ===== 전역 변수 =====
 let currentUser = null;
-let branches = [];
-let selectedBranchData = null;
+let pendingInvitations = [];
 
 // ===== 인증 상태 확인 =====
 auth.onAuthStateChanged(async (user) => {
@@ -50,144 +49,171 @@ auth.onAuthStateChanged(async (user) => {
         console.error('사용자 정보 로드 오류:', error);
     }
     
-    // 지점 목록 로드
-    await loadBranches();
+    // 초대 확인
+    await checkInvitations();
     
     // 그룹 목록 로드
     loadGroups();
 });
 
-// ===== 지점 목록 로드 =====
-async function loadBranches() {
+// ===== 초대 확인 =====
+async function checkInvitations() {
     try {
-        const snapshot = await db.collection('branches')
-            .orderBy('level')
-            .orderBy('name')
+        const userId = currentUser.userData?.userId || currentUser.email.split('@')[0];
+        
+        const snapshot = await db.collection('invitations')
+            .where('toUserId', '==', userId)
+            .where('status', '==', 'pending')
+            .orderBy('createdAt', 'desc')
             .get();
         
-        branches = [];
+        pendingInvitations = [];
         snapshot.forEach(doc => {
-            branches.push({ id: doc.id, ...doc.data() });
+            pendingInvitations.push({ id: doc.id, ...doc.data() });
         });
         
-        console.log(`✅ 지점 목록 로드 완료: ${branches.length}개`);
+        // 배지 업데이트
+        if (pendingInvitations.length > 0) {
+            invitationBadge.textContent = pendingInvitations.length;
+            invitationBadge.classList.remove('hidden');
+        } else {
+            invitationBadge.classList.add('hidden');
+        }
     } catch (error) {
-        console.error('지점 목록 로드 오류:', error);
-        alert('지점 목록을 불러오는 중 오류가 발생했습니다.');
+        console.error('초대 확인 오류:', error);
     }
 }
 
-// ===== 지점 검색 =====
-branchSearchInput.addEventListener('input', () => {
-    const query = branchSearchInput.value.trim();
+// ===== 초대 목록 모달 열기 =====
+invitationsBtn.addEventListener('click', () => {
+    renderInvitations();
+    invitationsModal.classList.remove('hidden');
+});
+
+// ===== 초대 목록 렌더링 =====
+function renderInvitations() {
+    invitationsList.innerHTML = '';
     
-    if (!query) {
-        branchSearchResults.classList.add('hidden');
+    if (pendingInvitations.length === 0) {
+        emptyInvitations.classList.remove('hidden');
         return;
     }
     
-    searchBranches(query);
-});
-
-branchSearchInput.addEventListener('focus', () => {
-    const query = branchSearchInput.value.trim();
-    if (query) {
-        searchBranches(query);
-    } else {
-        // 포커스 시 전체 목록 표시
-        showAllSelectableBranches();
-    }
-});
-
-function searchBranches(query) {
-    const lowerQuery = query.toLowerCase();
+    emptyInvitations.classList.add('hidden');
     
-    // 검색: 이름, 상위 조직명에서 검색 (선택 가능한 것만)
-    const results = branches.filter(branch => {
-        if (!branch.selectable) return false;
-        
-        const nameMatch = branch.name.toLowerCase().includes(lowerQuery);
-        const parentMatch = branch.parentName && branch.parentName.toLowerCase().includes(lowerQuery);
-        const pathMatch = branch.fullPath && branch.fullPath.toLowerCase().includes(lowerQuery);
-        
-        return nameMatch || parentMatch || pathMatch;
+    pendingInvitations.forEach(invitation => {
+        const card = createInvitationCard(invitation);
+        invitationsList.appendChild(card);
     });
-    
-    renderBranchResults(results);
 }
 
-function showAllSelectableBranches() {
-    const selectableBranches = branches.filter(b => b.selectable);
-    renderBranchResults(selectableBranches);
-}
-
-function renderBranchResults(results) {
-    branchList.innerHTML = '';
+// ===== 초대 카드 생성 =====
+function createInvitationCard(invitation) {
+    const card = document.createElement('div');
+    card.className = 'invitation-card';
     
-    if (results.length === 0) {
-        branchList.innerHTML = '<div class="no-results">검색 결과가 없습니다</div>';
-        branchSearchResults.classList.remove('hidden');
-        return;
-    }
+    const createdDate = invitation.createdAt ?
+        new Date(invitation.createdAt.toDate()).toLocaleDateString('ko-KR', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        }) : '날짜 정보 없음';
     
-    // 본점을 맨 위에
-    const headquarters = results.filter(b => b.level === 0);
-    const others = results.filter(b => b.level !== 0);
-    
-    const sortedResults = [...headquarters, ...others];
-    
-    sortedResults.forEach(branch => {
-        const item = createBranchItem(branch);
-        branchList.appendChild(item);
-    });
-    
-    branchSearchResults.classList.remove('hidden');
-}
-
-function createBranchItem(branch) {
-    const item = document.createElement('div');
-    item.className = 'branch-item';
-    
-    if (branch.level === 0) {
-        item.classList.add('headquarters');
-    }
-    
-    item.innerHTML = `
-        <span class="branch-item-name">
-            ${escapeHtml(branch.name)}
-            <span class="branch-item-type">${escapeHtml(branch.type)}</span>
-        </span>
-        ${branch.level !== 0 ? `<span class="branch-item-path">${escapeHtml(branch.parentName)}</span>` : '<span class="branch-item-path">최상위 조직</span>'}
+    card.innerHTML = `
+        <div class="invitation-info">
+            <h3>${escapeHtml(invitation.groupName)}</h3>
+            <p>초대한 사람: ${escapeHtml(invitation.fromUserId)}</p>
+            <p class="invitation-date">${createdDate}</p>
+        </div>
+        <div class="invitation-actions">
+            <button class="btn-accept" data-id="${invitation.id}">수락</button>
+            <button class="btn-reject" data-id="${invitation.id}">거절</button>
+        </div>
     `;
     
-    item.addEventListener('click', () => {
-        selectBranch(branch);
+    // 수락 버튼
+    card.querySelector('.btn-accept').addEventListener('click', async () => {
+        await acceptInvitation(invitation);
     });
     
-    return item;
+    // 거절 버튼
+    card.querySelector('.btn-reject').addEventListener('click', async () => {
+        await rejectInvitation(invitation);
+    });
+    
+    return card;
 }
 
-function selectBranch(branch) {
-    selectedBranchData = branch;
-    
-    // UI 업데이트
-    selectedBranchName.textContent = branch.name;
-    selectedBranchParent.textContent = branch.level === 0 ? '최상위 조직' : branch.parentName;
-    
-    selectedBranch.classList.remove('hidden');
-    branchSearchInput.value = branch.name;
-    branchSearchResults.classList.add('hidden');
-    
-    hideError(branchError);
+// ===== 초대 수락 =====
+async function acceptInvitation(invitation) {
+    try {
+        const userId = currentUser.userData?.userId || currentUser.email.split('@')[0];
+        
+        // groupMembers에 추가
+        await db.collection('groups').doc(invitation.groupId)
+            .collection('groupMembers').doc(userId).set({
+                userId: userId,
+                userName: userId,
+                role: 'member',
+                joinedAt: timestamp(),
+                invitedBy: invitation.fromUserId
+            });
+        
+        // members에도 추가 (기존 식사 기록용)
+        await db.collection('groups').doc(invitation.groupId)
+            .collection('members').add({
+                name: userId,
+                isFrequent: true,
+                createdAt: timestamp()
+            });
+        
+        // 초대 상태 업데이트
+        await db.collection('invitations').doc(invitation.id).update({
+            status: 'accepted',
+            respondedAt: timestamp()
+        });
+        
+        // 초대 목록 새로고침
+        await checkInvitations();
+        renderInvitations();
+        
+        // 그룹 목록 새로고침
+        await loadGroups();
+        
+        alert('그룹 초대를 수락했습니다!');
+    } catch (error) {
+        console.error('초대 수락 오류:', error);
+        alert('초대 수락 중 오류가 발생했습니다.');
+    }
 }
 
-// ===== 지점 변경 버튼 =====
-changeBranchBtn.addEventListener('click', () => {
-    selectedBranchData = null;
-    selectedBranch.classList.add('hidden');
-    branchSearchInput.value = '';
-    branchSearchInput.focus();
-});
+// ===== 초대 거절 =====
+async function rejectInvitation(invitation) {
+    try {
+        await db.collection('invitations').doc(invitation.id).update({
+            status: 'rejected',
+            respondedAt: timestamp()
+        });
+        
+        // 초대 목록 새로고침
+        await checkInvitations();
+        renderInvitations();
+        
+        alert('그룹 초대를 거절했습니다.');
+    } catch (error) {
+        console.error('초대 거절 오류:', error);
+        alert('초대 거절 중 오류가 발생했습니다.');
+    }
+}
+
+// ===== 초대 모달 닫기 =====
+function closeInvitationsModal() {
+    invitationsModal.classList.add('hidden');
+}
+
+invitationsModalClose.addEventListener('click', closeInvitationsModal);
+invitationsModalOverlay.addEventListener('click', closeInvitationsModal);
+closeInvitationsBtn.addEventListener('click', closeInvitationsModal);
 
 // ===== 로그아웃 =====
 logoutBtn.addEventListener('click', async () => {
@@ -200,25 +226,59 @@ logoutBtn.addEventListener('click', async () => {
     }
 });
 
-// ===== 그룹 목록 로드 =====
+// ===== 그룹 목록 로드 (권한 시스템 적용) =====
 async function loadGroups() {
     try {
         showLoading();
         
-        const snapshot = await db.collection('groups')
+        const userId = currentUser.userData?.userId || currentUser.email.split('@')[0];
+        const groups = [];
+        
+        // 1. 내가 만든 그룹
+        const ownedSnapshot = await db.collection('groups')
             .where('ownerId', '==', currentUser.uid)
             .orderBy('createdAt', 'desc')
             .get();
         
-        if (snapshot.empty) {
+        ownedSnapshot.forEach(doc => {
+            groups.push({ 
+                id: doc.id, 
+                ...doc.data(),
+                myRole: 'owner'
+            });
+        });
+        
+        // 2. 내가 멤버인 그룹
+        const allGroupsSnapshot = await db.collection('groups').get();
+        
+        for (const groupDoc of allGroupsSnapshot.docs) {
+            const groupId = groupDoc.id;
+            
+            // 이미 owner로 추가된 그룹은 스킵
+            if (groups.some(g => g.id === groupId)) continue;
+            
+            // groupMembers 확인
+            const memberDoc = await db.collection('groups').doc(groupId)
+                .collection('groupMembers').doc(userId).get();
+            
+            if (memberDoc.exists) {
+                groups.push({
+                    id: groupId,
+                    ...groupDoc.data(),
+                    myRole: 'member'
+                });
+            }
+        }
+        
+        if (groups.length === 0) {
             showEmptyState();
             return;
         }
         
+        // 그룹 카드 렌더링
         groupsGrid.innerHTML = '';
         
-        snapshot.forEach(doc => {
-            const group = { id: doc.id, ...doc.data() };
+        groups.forEach(group => {
             const card = createGroupCard(group);
             groupsGrid.appendChild(card);
         });
@@ -232,7 +292,7 @@ async function loadGroups() {
     }
 }
 
-// ===== 그룹 카드 생성 =====
+// ===== 그룹 카드 생성 (역할 배지 추가) =====
 function createGroupCard(group) {
     const card = document.createElement('div');
     card.className = 'group-card';
@@ -245,17 +305,17 @@ function createGroupCard(group) {
             day: 'numeric' 
         }) : '날짜 정보 없음';
     
+    // 역할 배지
+    const roleBadge = group.myRole === 'owner' 
+        ? '<span class="role-badge owner">⭐ 방장</span>'
+        : '<span class="role-badge member">멤버</span>';
+    
     card.innerHTML = `
         <div class="group-card-header">
             <div class="group-icon">🍱</div>
+            ${roleBadge}
         </div>
         <div class="group-name">${escapeHtml(group.groupName)}</div>
-        ${group.branchName ? `
-        <div class="group-branch">
-            <span class="group-branch-icon">📍</span>
-            <span>${escapeHtml(group.branchName)}</span>
-        </div>
-        ` : ''}
         <div class="group-info">
             <div class="group-info-item">
                 <span class="group-info-icon">📅</span>
@@ -300,38 +360,24 @@ function showGroupsList() {
 
 // ===== 모달 열기/닫기 =====
 function openModal() {
-    // 초기화
-    selectedBranchData = null;
-    selectedBranch.classList.add('hidden');
-    branchSearchInput.value = '';
-    branchSearchResults.classList.add('hidden');
-    
     createGroupModal.classList.remove('hidden');
     groupNameInput.value = '';
     groupNameInput.focus();
     hideError(groupNameError);
-    hideError(branchError);
 }
 
 function closeModal() {
     createGroupModal.classList.add('hidden');
     groupNameInput.value = '';
-    branchSearchInput.value = '';
-    selectedBranchData = null;
-    selectedBranch.classList.add('hidden');
-    branchSearchResults.classList.add('hidden');
     hideError(groupNameError);
-    hideError(branchError);
 }
 
-// 이벤트 리스너
 fabBtn.addEventListener('click', openModal);
 createFirstGroupBtn.addEventListener('click', openModal);
 modalClose.addEventListener('click', closeModal);
 modalOverlay.addEventListener('click', closeModal);
 cancelBtn.addEventListener('click', closeModal);
 
-// ESC 키로 모달 닫기
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && !createGroupModal.classList.contains('hidden')) {
         closeModal();
@@ -349,11 +395,10 @@ function hideError(element) {
     element.classList.remove('show');
 }
 
-// ===== 그룹 생성 =====
+// ===== 그룹 생성 (groupMembers 추가) =====
 createGroupBtn.addEventListener('click', async () => {
     const groupName = groupNameInput.value.trim();
     
-    // 그룹명 검증
     if (!groupName) {
         showError(groupNameError, '그룹 이름을 입력해주세요.');
         return;
@@ -364,41 +409,38 @@ createGroupBtn.addEventListener('click', async () => {
         return;
     }
     
-    // 지점 선택 검증
-    if (!selectedBranchData) {
-        showError(branchError, '소속 조직을 선택해주세요.');
-        branchSearchInput.focus();
-        return;
-    }
-    
     createGroupBtn.disabled = true;
     createGroupBtn.textContent = '생성 중...';
     
     try {
-        // Firestore에 그룹 생성
+        const userId = currentUser.userData?.userId || currentUser.email.split('@')[0];
+        
+        // 그룹 생성
         const groupRef = await db.collection('groups').add({
             groupName: groupName,
             ownerId: currentUser.uid,
-            branchId: selectedBranchData.id,
-            branchName: selectedBranchData.name,
-            branchType: selectedBranchData.type,
-            branchLevel: selectedBranchData.level,
-            branchFullPath: selectedBranchData.fullPath,
             createdAt: timestamp(),
             updatedAt: timestamp()
         });
         
-        // 총무를 그룹원으로 자동 추가
-        const userId = currentUser.userData?.userId || currentUser.email.split('@')[0];
-        await db.collection('groups').doc(groupRef.id).collection('members').add({
-            name: userId,
-            createdAt: timestamp()
-        });
+        // groupMembers에 방장 추가
+        await db.collection('groups').doc(groupRef.id)
+            .collection('groupMembers').doc(userId).set({
+                userId: userId,
+                userName: userId,
+                role: 'owner',
+                joinedAt: timestamp()
+            });
         
-        // 모달 닫기
+        // members에도 추가 (기존 식사 기록용)
+        await db.collection('groups').doc(groupRef.id)
+            .collection('members').add({
+                name: userId,
+                isFrequent: true,
+                createdAt: timestamp()
+            });
+        
         closeModal();
-        
-        // 그룹 목록 새로고침
         loadGroups();
         
     } catch (error) {
@@ -410,35 +452,8 @@ createGroupBtn.addEventListener('click', async () => {
     }
 });
 
-// Enter 키로 그룹 생성
 groupNameInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter' && selectedBranchData) {
+    if (e.key === 'Enter') {
         createGroupBtn.click();
     }
-});
-
-// ⭐⭐⭐ Phase 4: 탭 전환 로직 추가 ⭐⭐⭐
-const tabBtns = document.querySelectorAll('.tab-btn');
-const tabContents = document.querySelectorAll('.tab-content');
-
-tabBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-        const targetTab = btn.getAttribute('data-tab');
-        
-        // 모든 탭 버튼 비활성화
-        tabBtns.forEach(b => b.classList.remove('active'));
-        
-        // 클릭한 탭 버튼 활성화
-        btn.classList.add('active');
-        
-        // 모든 탭 컨텐츠 숨김
-        tabContents.forEach(content => content.classList.remove('active'));
-        
-        // 선택한 탭 컨텐츠 표시
-        if (targetTab === 'my-groups') {
-            document.getElementById('my-groups-tab').classList.add('active');
-        } else if (targetTab === 'branch-restaurants') {
-            document.getElementById('branch-restaurants-tab').classList.add('active');
-        }
-    });
 });
