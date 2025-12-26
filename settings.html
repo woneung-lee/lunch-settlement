@@ -58,6 +58,20 @@
                     </div>
                 </div>
 
+                <!-- 멤버 관리 섹션 -->
+                <div class="settings-section">
+                    <div class="section-header-with-btn">
+                        <h3>멤버 관리</h3>
+                        <button class="btn-invite" id="invite-member-btn">멤버 초대</button>
+                    </div>
+                    <div id="members-list">
+                        <!-- 멤버 목록이 동적으로 추가됨 -->
+                    </div>
+                    <button class="btn-view-invitations" id="view-invitations-btn">
+                        초대 현황 확인
+                    </button>
+                </div>
+
                 <!-- 계정 정보 -->
                 <div class="settings-section">
                     <h3>계정 정보</h3>
@@ -89,32 +103,33 @@
                 </div>
             </div>
         </main>
+
         <nav class="bottom-nav">
-    <a href="#" class="nav-item" id="nav-home">
-        <span class="nav-icon">📅</span>
-        <span class="nav-label">홈</span>
-    </a>
-    <a href="#" class="nav-item" id="nav-members">
-        <span class="nav-icon">👥</span>
-        <span class="nav-label">그룹원</span>
-    </a>
-    <a href="#" class="nav-item" id="nav-restaurants">
-        <span class="nav-icon">🍽️</span>
-        <span class="nav-label">음식점</span>
-    </a>
-    <a href="#" class="nav-item" id="nav-roulette">
-        <span class="nav-icon">🎰</span>
-        <span class="nav-label">룰렛</span>
-    </a>
-    <a href="#" class="nav-item" id="nav-stats">
-        <span class="nav-icon">📊</span>
-        <span class="nav-label">통계</span>
-    </a>
-    <a href="#" class="nav-item active" id="nav-settings">
-        <span class="nav-icon">⚙️</span>
-        <span class="nav-label">설정</span>
-    </a>
-</nav>
+            <a href="#" class="nav-item" id="nav-home">
+                <span class="nav-icon">📅</span>
+                <span class="nav-label">홈</span>
+            </a>
+            <a href="#" class="nav-item" id="nav-members">
+                <span class="nav-icon">👥</span>
+                <span class="nav-label">그룹원</span>
+            </a>
+            <a href="#" class="nav-item" id="nav-restaurants">
+                <span class="nav-icon">🍽️</span>
+                <span class="nav-label">음식점</span>
+            </a>
+            <a href="#" class="nav-item" id="nav-roulette">
+                <span class="nav-icon">🎰</span>
+                <span class="nav-label">룰렛</span>
+            </a>
+            <a href="#" class="nav-item" id="nav-stats">
+                <span class="nav-icon">📊</span>
+                <span class="nav-label">통계</span>
+            </a>
+            <a href="#" class="nav-item active" id="nav-settings">
+                <span class="nav-icon">⚙️</span>
+                <span class="nav-label">설정</span>
+            </a>
+        </nav>
     </div>
 
     <!-- 그룹명 수정 모달 -->
@@ -136,6 +151,51 @@
             <div class="modal-footer">
                 <button class="btn-secondary" id="cancel-btn">취소</button>
                 <button class="btn-primary" id="save-name-btn">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 멤버 초대 모달 -->
+    <div class="modal hidden" id="invite-modal">
+        <div class="modal-overlay" id="invite-modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>멤버 초대</h2>
+                <button class="modal-close" id="invite-modal-close">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="invite-user-id">초대할 사용자의 아이디</label>
+                    <input type="text" id="invite-user-id" placeholder="아이디 입력">
+                    <div class="input-hint">가입된 사용자의 아이디를 입력하세요</div>
+                    <div class="error-message" id="invite-error"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="invite-cancel-btn">취소</button>
+                <button class="btn-primary" id="send-invite-btn">초대 발송</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 초대 현황 모달 -->
+    <div class="modal hidden" id="invitations-status-modal">
+        <div class="modal-overlay" id="invitations-status-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>초대 현황</h2>
+                <button class="modal-close" id="invitations-status-close">×</button>
+            </div>
+            <div class="modal-body">
+                <div id="sent-invitations-list">
+                    <!-- 보낸 초대 목록이 동적으로 추가됨 -->
+                </div>
+                <div class="empty-invitations hidden" id="empty-sent-invitations">
+                    <p>보낸 초대가 없습니다.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="close-invitations-status-btn">닫기</button>
             </div>
         </div>
     </div>
