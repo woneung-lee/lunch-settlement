@@ -1,6 +1,7 @@
 // ===== 전역 변수 =====
 let currentUser = null;
 let groupId = null;
+let groupData = null;
 let restaurants = [];
 let editingRestaurantId = null;
 let currentFilter = 'all';
@@ -24,6 +25,9 @@ const modalClose = document.getElementById('modal-close');
 const modalTitle = document.getElementById('modal-title');
 const restaurantNameInput = document.getElementById('restaurant-name');
 const restaurantCategorySelect = document.getElementById('restaurant-category');
+const shareRestaurantCheckbox = document.getElementById('share-restaurant');
+const shareDetails = document.getElementById('share-details');
+const shareReasonTextarea = document.getElementById('share-reason');
 const nameError = document.getElementById('name-error');
 const restaurantError = document.getElementById('restaurant-error');
 const cancelBtn = document.getElementById('cancel-btn');
@@ -39,7 +43,7 @@ if (!groupId) {
     window.location.href = 'groups.html';
 }
 
-// ===== 하단 네비게이션 링크 세팅(그룹ID 유지) =====
+// ===== 하단 네비게이션 링크 세팅 =====
 (function setupBottomNav() {
     const routes = {
         'nav-home': `home.html?groupId=${groupId}`,
@@ -53,14 +57,10 @@ if (!groupId) {
     Object.entries(routes).forEach(([id, url]) => {
         const el = document.getElementById(id);
         if (!el) return;
-
-        // <a> 태그면 href를 세팅(가장 안정적)
         if (el.tagName && el.tagName.toLowerCase() === 'a') {
             el.setAttribute('href', url);
             return;
         }
-
-        // <button> 등이라면 클릭 이동
         el.addEventListener('click', (e) => {
             e.preventDefault();
             window.location.href = url;
@@ -76,8 +76,26 @@ auth.onAuthStateChanged(async (user) => {
     }
     
     currentUser = user;
+    await loadGroupData();
     await loadRestaurants();
 });
+
+// ===== 그룹 데이터 로드 =====
+async function loadGroupData() {
+    try {
+        const groupDoc = await db.collection('groups').doc(groupId).get();
+        if (groupDoc.exists) {
+            groupData = { id: groupDoc.id, ...groupDoc.data() };
+        } else {
+            alert('그룹을 찾을 수 없습니다.');
+            window.location.href = 'groups.html';
+        }
+    } catch (error) {
+        console.error('그룹 로드 오류:', error);
+        alert('그룹 정보를 불러오는 중 오류가 발생했습니다.');
+        window.location.href = 'groups.html';
+    }
+}
 
 // ===== 음식점 목록 로드 =====
 async function loadRestaurants() {
@@ -112,7 +130,6 @@ async function loadRestaurants() {
 function renderRestaurants() {
     restaurantsList.innerHTML = '';
     
-    // 필터링
     const filteredRestaurants = currentFilter === 'all' 
         ? restaurants 
         : restaurants.filter(r => r.category === currentFilter);
@@ -138,6 +155,9 @@ function renderRestaurants() {
 function createRestaurantCard(restaurant) {
     const card = document.createElement('div');
     card.className = 'restaurant-card';
+    if (restaurant.isShared) {
+        card.classList.add('shared');
+    }
     card.onclick = () => openRestaurantModal(restaurant.id);
     
     const createdDate = restaurant.createdAt ? 
@@ -148,11 +168,12 @@ function createRestaurantCard(restaurant) {
         }) : '날짜 정보 없음';
     
     const categoryEmoji = getCategoryEmoji(restaurant.category);
+    const shareBadge = restaurant.isShared ? '<span class="share-badge">공유됨</span>' : '';
     
     card.innerHTML = `
         <div class="card-header">
             <div class="card-icon">${categoryEmoji}</div>
-            <span class="category-badge">${escapeHtml(restaurant.category)}</span>
+            <span class="category-badge">${escapeHtml(restaurant.category)}${shareBadge}</span>
         </div>
         <div class="card-name">${escapeHtml(restaurant.name)}</div>
         <div class="card-info">
@@ -179,7 +200,7 @@ function getCategoryEmoji(category) {
     return emojiMap[category] || '🍽️';
 }
 
-// ===== HTML 이스케이프 (XSS 방지) =====
+// ===== HTML 이스케이프 =====
 function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
@@ -211,20 +232,27 @@ function showEmptyState() {
 // ===== 카테고리 필터 =====
 filterBtns.forEach(btn => {
     btn.addEventListener('click', () => {
-        // 모든 버튼 비활성화
         filterBtns.forEach(b => b.classList.remove('active'));
-        // 클릭한 버튼 활성화
         btn.classList.add('active');
-        
         currentFilter = btn.dataset.category;
         renderRestaurants();
     });
 });
 
-// ===== 모달 열기 (새 음식점 또는 수정) =====
+// ===== 공유 체크박스 토글 =====
+shareRestaurantCheckbox.addEventListener('change', () => {
+    if (shareRestaurantCheckbox.checked) {
+        shareDetails.classList.remove('hidden');
+        shareReasonTextarea.focus();
+    } else {
+        shareDetails.classList.add('hidden');
+        shareReasonTextarea.value = '';
+    }
+});
+
+// ===== 모달 열기 =====
 function openRestaurantModal(restaurantId = null) {
     if (restaurantId) {
-        // 기존 음식점 수정
         const restaurant = restaurants.find(r => r.id === restaurantId);
         if (!restaurant) return;
         
@@ -234,14 +262,24 @@ function openRestaurantModal(restaurantId = null) {
         
         restaurantNameInput.value = restaurant.name;
         restaurantCategorySelect.value = restaurant.category;
+        shareRestaurantCheckbox.checked = restaurant.isShared || false;
+        shareReasonTextarea.value = restaurant.shareReason || '';
+        
+        if (shareRestaurantCheckbox.checked) {
+            shareDetails.classList.remove('hidden');
+        } else {
+            shareDetails.classList.add('hidden');
+        }
     } else {
-        // 새 음식점 추가
         editingRestaurantId = null;
         modalTitle.textContent = '음식점 추가';
         deleteRestaurantBtn.classList.add('hidden');
         
         restaurantNameInput.value = '';
         restaurantCategorySelect.value = '한식';
+        shareRestaurantCheckbox.checked = false;
+        shareReasonTextarea.value = '';
+        shareDetails.classList.add('hidden');
     }
     
     restaurantModal.classList.remove('hidden');
@@ -249,41 +287,36 @@ function openRestaurantModal(restaurantId = null) {
     hideError(nameError);
     hideError(restaurantError);
 
-    // 저장/삭제 버튼 상태 초기화(저장 중... 잔상 방지)
-saveRestaurantBtn.disabled = false;
-saveRestaurantBtn.textContent = '저장';
-deleteRestaurantBtn.disabled = false;
-deleteRestaurantBtn.textContent = '삭제';
+    saveRestaurantBtn.disabled = false;
+    saveRestaurantBtn.textContent = '저장';
+    deleteRestaurantBtn.disabled = false;
+    deleteRestaurantBtn.textContent = '삭제';
 }
 
 // ===== 모달 닫기 =====
 function closeRestaurantModal() {
     restaurantModal.classList.add('hidden');
-
-    // 모달 닫을 때도 버튼 상태 초기화
-saveRestaurantBtn.disabled = false;
-saveRestaurantBtn.textContent = '저장';
-deleteRestaurantBtn.disabled = false;
-deleteRestaurantBtn.textContent = '삭제';
+    saveRestaurantBtn.disabled = false;
+    saveRestaurantBtn.textContent = '저장';
+    deleteRestaurantBtn.disabled = false;
+    deleteRestaurantBtn.textContent = '삭제';
 }
 
 modalClose.addEventListener('click', closeRestaurantModal);
 modalOverlay.addEventListener('click', closeRestaurantModal);
 cancelBtn.addEventListener('click', closeRestaurantModal);
 
-// ESC 키로 모달 닫기
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && !restaurantModal.classList.contains('hidden')) {
         closeRestaurantModal();
     }
 });
 
-// ===== FAB 클릭 =====
 fabBtn.addEventListener('click', () => {
     openRestaurantModal();
 });
 
-// ===== 에러 메시지 표시/숨김 =====
+// ===== 에러 메시지 =====
 function showError(element, message) {
     element.textContent = message;
     element.classList.add('show');
@@ -301,6 +334,8 @@ saveRestaurantBtn.addEventListener('click', async () => {
     
     const name = restaurantNameInput.value.trim();
     const category = restaurantCategorySelect.value;
+    const isShared = shareRestaurantCheckbox.checked;
+    const shareReason = shareReasonTextarea.value.trim();
     
     // 유효성 검사
     if (!name) {
@@ -313,7 +348,13 @@ saveRestaurantBtn.addEventListener('click', async () => {
         return;
     }
     
-    // 중복 확인 (수정 시 본인 제외)
+    // 그룹 데이터에 지점 정보가 없으면 공유 불가
+    if (isShared && !groupData.branchId) {
+        showError(restaurantError, '지점 정보가 없는 그룹은 맛집을 공유할 수 없습니다.');
+        return;
+    }
+    
+    // 중복 확인
     const duplicate = restaurants.find(r => 
         r.name === name && r.category === category && r.id !== editingRestaurantId
     );
@@ -330,6 +371,8 @@ saveRestaurantBtn.addEventListener('click', async () => {
         const restaurantData = {
             name: name,
             category: category,
+            isShared: isShared,
+            shareReason: isShared ? shareReason : null,
             updatedAt: timestamp()
         };
         
@@ -337,15 +380,27 @@ saveRestaurantBtn.addEventListener('click', async () => {
             // 기존 음식점 수정
             await db.collection('groups').doc(groupId)
                 .collection('restaurants').doc(editingRestaurantId).update(restaurantData);
+            
+            // 공유 상태 변경 처리
+            if (isShared) {
+                await shareRestaurant(editingRestaurantId, name, category, shareReason);
+            } else {
+                await unshareRestaurant(editingRestaurantId);
+            }
         } else {
             // 새 음식점 추가
             restaurantData.createdAt = timestamp();
-            await db.collection('groups').doc(groupId)
+            const docRef = await db.collection('groups').doc(groupId)
                 .collection('restaurants').add(restaurantData);
+            
+            // 공유 처리
+            if (isShared) {
+                await shareRestaurant(docRef.id, name, category, shareReason);
+            }
         }
         
-closeRestaurantModal();
-await loadRestaurants();
+        closeRestaurantModal();
+        await loadRestaurants();
         
     } catch (error) {
         console.error('음식점 저장 오류:', error);
@@ -355,6 +410,60 @@ await loadRestaurants();
         saveRestaurantBtn.textContent = '저장';
     }
 });
+
+// ===== 맛집 공유 =====
+async function shareRestaurant(restaurantId, name, category, reason) {
+    try {
+        // sharedRestaurants 컬렉션에 추가
+        await db.collection('sharedRestaurants').add({
+            // 음식점 정보
+            restaurantId: restaurantId,
+            restaurantName: name,
+            category: category,
+            
+            // 지점 정보
+            branchId: groupData.branchId,
+            branchName: groupData.branchName,
+            branchFullPath: groupData.branchFullPath,
+            branchType: groupData.branchType,
+            branchLevel: groupData.branchLevel,
+            
+            // 그룹 정보 (그룹명만!)
+            groupId: groupId,
+            groupName: groupData.groupName,
+            
+            // 공유 내용
+            reason: reason || '',
+            
+            // 내부 참조용 (UI에 절대 표시 안 함!)
+            sharedBy: currentUser.uid,
+            sharedAt: timestamp()
+        });
+    } catch (error) {
+        console.error('맛집 공유 오류:', error);
+        throw error;
+    }
+}
+
+// ===== 맛집 공유 취소 =====
+async function unshareRestaurant(restaurantId) {
+    try {
+        // 해당 음식점의 공유 기록 삭제
+        const snapshot = await db.collection('sharedRestaurants')
+            .where('groupId', '==', groupId)
+            .where('restaurantId', '==', restaurantId)
+            .get();
+        
+        const batch = db.batch();
+        snapshot.forEach(doc => {
+            batch.delete(doc.ref);
+        });
+        await batch.commit();
+    } catch (error) {
+        console.error('맛집 공유 취소 오류:', error);
+        throw error;
+    }
+}
 
 // ===== 음식점 삭제 =====
 deleteRestaurantBtn.addEventListener('click', async () => {
@@ -366,8 +475,12 @@ deleteRestaurantBtn.addEventListener('click', async () => {
     deleteRestaurantBtn.textContent = '삭제 중...';
     
     try {
+        // 음식점 삭제
         await db.collection('groups').doc(groupId)
             .collection('restaurants').doc(editingRestaurantId).delete();
+        
+        // 공유 기록도 삭제
+        await unshareRestaurant(editingRestaurantId);
         
         await loadRestaurants();
         closeRestaurantModal();
