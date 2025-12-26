@@ -16,14 +16,7 @@
                     <div class="logo-icon-small">🍱</div>
                     <h1>내 그룹</h1>
                 </div>
-                <div class="header-right">
-                    <!-- 초대 알림 버튼 -->
-                    <button class="btn-invitations" id="invitations-btn">
-                        🔔
-                        <span class="invitation-badge hidden" id="invitation-badge">0</span>
-                    </button>
-                    <button class="btn-logout" id="logout-btn">로그아웃</button>
-                </div>
+                <button class="btn-logout" id="logout-btn">로그아웃</button>
             </div>
         </header>
 
@@ -79,50 +72,39 @@
                     <div class="input-hint">최대 30자</div>
                     <div class="error-message" id="group-name-error"></div>
                 </div>
-            </div>
 
-            <!-- 지점 선택 -->
                 <div class="form-group">
-                    <label for="branch-search">소속 지점</label>
-                    <input type="text" id="branch-search" placeholder="지점명 검색 (예: 마포, 본점)" autocomplete="off">
-                    <div class="input-hint">검색 후 선택하세요</div>
+                    <label for="branch-search">소속 조직</label>
+                    <input
+                        type="text"
+                        id="branch-search"
+                        placeholder="🔍 조직명 검색 (본점, 지점명)"
+                        autocomplete="off"
+                    >
+                    <div class="input-hint">본점 또는 소속 조직을 선택하세요</div>
                     
+                    <!-- 선택된 지점 표시 -->
                     <div class="selected-branch hidden" id="selected-branch">
-                        <span id="selected-branch-name"></span>
-                        <button type="button" class="btn-change" id="change-branch-btn">변경</button>
+                        <div class="selected-branch-info">
+                            <div class="selected-branch-name" id="selected-branch-name"></div>
+                            <div class="selected-branch-parent" id="selected-branch-parent"></div>
+                        </div>
+                        <button type="button" class="btn-change-branch" id="change-branch-btn">변경</button>
                     </div>
                     
-                    <div class="branch-search-results hidden" id="branch-search-results"></div>
+                    <!-- 검색 결과 -->
+                    <div class="branch-search-results hidden" id="branch-search-results">
+                        <div class="branch-list" id="branch-list">
+                            <!-- 검색 결과가 동적으로 추가됨 -->
+                        </div>
+                    </div>
+                    
                     <div class="error-message" id="branch-error"></div>
                 </div>
-            
+            </div>
             <div class="modal-footer">
                 <button class="btn-secondary" id="cancel-btn">취소</button>
                 <button class="btn-primary" id="create-group-btn">만들기</button>
-            </div>
-        </div>
-    </div>
-
-    
-
-    <!-- 초대 목록 모달 -->
-    <div class="modal hidden" id="invitations-modal">
-        <div class="modal-overlay" id="invitations-modal-overlay"></div>
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>받은 초대</h2>
-                <button class="modal-close" id="invitations-modal-close">×</button>
-            </div>
-            <div class="modal-body">
-                <div id="invitations-list">
-                    <!-- 초대 카드들이 동적으로 추가됨 -->
-                </div>
-                <div class="empty-invitations hidden" id="empty-invitations">
-                    <p>받은 초대가 없습니다.</p>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn-secondary" id="close-invitations-btn">닫기</button>
             </div>
         </div>
     </div>
