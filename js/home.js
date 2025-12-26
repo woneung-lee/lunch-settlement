@@ -1,5 +1,6 @@
 // ===== 전역 변수 =====
 let currentUser = null;
+let currentUserRole = null;
 let groupId = null;
 let groupData = null;
 let currentYear = new Date().getFullYear();
@@ -64,6 +65,43 @@ if (!groupId) {
     window.location.href = 'groups.html';
 }
 
+// ===== 그룹 접근 권한 확인(방 멤버십 기준) =====
+async function ensureGroupAccess(user, groupId) {
+    if (!user || !groupId) return null;
+
+    const groupRef = db.collection('groups').doc(groupId);
+    const groupDoc = await groupRef.get();
+    if (!groupDoc.exists) {
+        alert('그룹을 찾을 수 없습니다.');
+        window.location.href = 'groups.html';
+        return null;
+    }
+
+    const group = groupDoc.data() || {};
+    const gmRef = groupRef.collection('groupMembers').doc(user.uid);
+    const gmDoc = await gmRef.get();
+
+    // 정상: 방 멤버십 존재
+    if (gmDoc.exists) {
+        const gm = gmDoc.data() || {};
+        return { group, role: gm.role || 'member' };
+    }
+
+    // 구버전 데이터 보정: ownerId는 방장으로 자동 등록
+    if (group.ownerId && group.ownerId === user.uid) {
+        await gmRef.set({
+            userId: user.uid,
+            role: 'owner',
+            joinedAt: timestamp()
+        }, { merge: true });
+        return { group, role: 'owner' };
+    }
+
+    alert('해당 그룹에 대한 접근 권한이 없습니다.');
+    window.location.href = 'groups.html';
+    return null;
+}
+
 // ===== 인증 상태 확인 =====
 auth.onAuthStateChanged(async (user) => {
     if (!user) {
@@ -72,6 +110,9 @@ auth.onAuthStateChanged(async (user) => {
     }
     
     currentUser = user;
+    const access = await ensureGroupAccess(user, groupId);
+    if (!access) return;
+    currentUserRole = access.role;
     await loadGroupData();
     await loadRestaurants();
     await loadMembers();
@@ -740,6 +781,51 @@ addOrderBtn.addEventListener('click', () => {
     addOrderItem();
 });
 
+
+function onOrderMemberSelectChange(orderId) {
+    const item = orderList.querySelector(`[data-order-id="${orderId}"]`);
+    if (!item) return;
+
+    const sel = item.querySelector('.order-member-select');
+    const guestInput = item.querySelector('.order-guest-name');
+    if (!sel || !guestInput) return;
+
+    const isGuest = sel.value === '__guest__';
+    if (isGuest) {
+        guestInput.classList.remove('hidden');
+        guestInput.focus();
+    } else {
+        guestInput.classList.add('hidden');
+        guestInput.value = '';
+    }
+}
+
+function initOrderMemberUI(orderId, memberName) {
+    const item = orderList.querySelector(`[data-order-id="${orderId}"]`);
+    if (!item) return;
+
+    const sel = item.querySelector('.order-member-select');
+    const guestInput = item.querySelector('.order-guest-name');
+    if (!sel || !guestInput) return;
+
+    const name = String(memberName || '').trim();
+    const registered = getRegisteredMembers().some(m => String(m.name || '').trim() === name);
+
+    if (name && registered) {
+        sel.value = name;
+        guestInput.classList.add('hidden');
+        guestInput.value = '';
+    } else if (name) {
+        sel.value = '__guest__';
+        guestInput.classList.remove('hidden');
+        guestInput.value = name;
+    } else {
+        sel.value = '';
+        guestInput.classList.add('hidden');
+        guestInput.value = '';
+    }
+}
+
 function addOrderItem(orderData = null) {
     orderCounter++;
     const orderItem = document.createElement('div');
@@ -754,11 +840,13 @@ function addOrderItem(orderData = null) {
         <div class="order-fields">
             <div class="form-group">
                 <label>이름</label>
-                <input type="text" class="order-member" placeholder="멤버는 목록에서 선택, 게스트는 이름 직접 입력" list="members-list-${orderCounter}" value="${orderData?.memberName || ''}">
-                <datalist id="members-list-${orderCounter}">
-                    ${getRegisteredMembers().map(m => `<option value="${escapeHtml(m.name)}">`).join('')}
-                </datalist>
-                <div class="order-helper">※ 목록에는 '그룹 멤버'만 표시됩니다. 게스트는 이름을 직접 입력해 주십시오.</div>
+                <select class="order-member-select" onchange="onOrderMemberSelectChange(${orderCounter})">
+                    <option value="">선택하세요</option>
+                    ${getRegisteredMembers().map(m => `<option value="${escapeHtml(m.name)}">${escapeHtml(m.name)}</option>`).join('')}
+                    <option value="__guest__">+ 게스트 직접입력</option>
+                </select>
+                <input type="text" class="order-guest-name hidden" placeholder="게스트 이름 입력" value="">
+                <div class="order-helper">※ '그룹원'은 선택 가능하며, 목록에 없는 인원은 '게스트 직접입력'을 선택 후 이름을 입력해 주십시오.</div>
             </div>
             <div class="field-row">
                 <div class="form-group">
@@ -926,7 +1014,14 @@ saveMealBtn.addEventListener('click', async () => {
     const orders = [];
     const orderItems = ordersList.querySelectorAll('.order-item');
     for (let item of orderItems) {
-        const memberName = item.querySelector('.order-member').value.trim();
+        const sel = item.querySelector('.order-member-select');
+        const guestInput = item.querySelector('.order-guest-name');
+        let memberName = '';
+        if (sel && sel.value === '__guest__') {
+            memberName = String(guestInput ? guestInput.value : '').trim();
+        } else {
+            memberName = String(sel ? sel.value : '').trim();
+        }
         const menu = item.querySelector('.order-menu').value.trim();
         const amount = parseAmount(item.querySelector('.order-amount').value);
         
@@ -1029,3 +1124,5 @@ deleteMealBtn.addEventListener('click', async () => {
         deleteMealBtn.textContent = '삭제';
     }
 });
+    // 이름 선택 UI 초기화(등록 그룹원 vs 게스트)
+    initOrderMemberUI(orderCounter, orderData?.memberName || '');
