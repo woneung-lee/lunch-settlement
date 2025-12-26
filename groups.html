@@ -16,63 +16,47 @@
                     <div class="logo-icon-small">🍱</div>
                     <h1>내 그룹</h1>
                 </div>
-                <button class="btn-logout" id="logout-btn">로그아웃</button>
+                <div class="header-right">
+                    <!-- 초대 알림 버튼 -->
+                    <button class="btn-invitations" id="invitations-btn">
+                        🔔
+                        <span class="invitation-badge hidden" id="invitation-badge">0</span>
+                    </button>
+                    <button class="btn-logout" id="logout-btn">로그아웃</button>
+                </div>
             </div>
         </header>
 
-        <!-- ⭐ Phase 4: 탭 컨테이너 추가 -->
-        <div class="tabs-container">
-            <button class="tab-btn active" data-tab="my-groups">
-                <span>내 그룹</span>
-            </button>
-            <button class="tab-btn" data-tab="branch-restaurants">
-                <span>맛집 목록</span>
-            </button>
-        </div>
+        <!-- 메인 컨텐츠 -->
+        <main class="main-content">
+            <!-- 로딩 상태 -->
+            <div class="loading-state" id="loading-state">
+                <div class="spinner"></div>
+                <p>그룹 목록을 불러오는 중...</p>
+            </div>
 
-        <!-- ⭐ Phase 4: 내 그룹 탭 컨텐츠 -->
-        <div class="tab-content active" id="my-groups-tab">
-            <!-- 메인 컨텐츠 -->
-            <main class="main-content">
-                <!-- 로딩 상태 -->
-                <div class="loading-state" id="loading-state">
-                    <div class="spinner"></div>
-                    <p>그룹 목록을 불러오는 중...</p>
+            <!-- 빈 상태 -->
+            <div class="empty-state hidden" id="empty-state">
+                <div class="empty-icon">📦</div>
+                <h2>아직 그룹이 없어요</h2>
+                <p>새로운 그룹을 만들어 점심 정산을 시작해보세요!</p>
+                <button class="btn-primary" id="create-first-group-btn">
+                    첫 그룹 만들기
+                </button>
+            </div>
+
+            <!-- 그룹 목록 -->
+            <div class="groups-container hidden" id="groups-container">
+                <div class="groups-grid" id="groups-grid">
+                    <!-- 그룹 카드들이 동적으로 추가됨 -->
                 </div>
+            </div>
+        </main>
 
-                <!-- 빈 상태 -->
-                <div class="empty-state hidden" id="empty-state">
-                    <div class="empty-icon">📦</div>
-                    <h2>아직 그룹이 없어요</h2>
-                    <p>새로운 그룹을 만들어 점심 정산을 시작해보세요!</p>
-                    <button class="btn-primary" id="create-first-group-btn">
-                        첫 그룹 만들기
-                    </button>
-                </div>
-
-                <!-- 그룹 목록 -->
-                <div class="groups-container hidden" id="groups-container">
-                    <div class="groups-grid" id="groups-grid">
-                        <!-- 그룹 카드들이 동적으로 추가됨 -->
-                    </div>
-                </div>
-            </main>
-
-            <!-- 플로팅 추가 버튼 -->
-            <button class="fab" id="fab-btn">
-                <span class="fab-icon">+</span>
-            </button>
-        </div>
-
-        <!-- ⭐ Phase 4: 맛집 목록 탭 컨텐츠 -->
-        <div class="tab-content" id="branch-restaurants-tab">
-            <iframe 
-                src="branch-restaurants.html" 
-                frameborder="0" 
-                style="width: 100%; height: calc(100vh - 140px); border: none;"
-                title="맛집 목록"
-            ></iframe>
-        </div>
+        <!-- 플로팅 추가 버튼 -->
+        <button class="fab" id="fab-btn">
+            <span class="fab-icon">+</span>
+        </button>
     </div>
 
     <!-- 그룹 생성 모달 -->
@@ -95,40 +79,32 @@
                     <div class="input-hint">최대 30자</div>
                     <div class="error-message" id="group-name-error"></div>
                 </div>
-
-                <!-- Phase 2: 지점 검색 UI -->
-                <div class="form-group">
-                    <label for="branch-search">소속 조직</label>
-                    <input
-                        type="text"
-                        id="branch-search"
-                        placeholder="🔍 조직명 검색 (본점, 지점명)"
-                        autocomplete="off"
-                    >
-                    <div class="input-hint">본점 또는 소속 조직을 선택하세요</div>
-                    
-                    <!-- 선택된 지점 표시 -->
-                    <div class="selected-branch hidden" id="selected-branch">
-                        <div class="selected-branch-info">
-                            <div class="selected-branch-name" id="selected-branch-name"></div>
-                            <div class="selected-branch-parent" id="selected-branch-parent"></div>
-                        </div>
-                        <button type="button" class="btn-change-branch" id="change-branch-btn">변경</button>
-                    </div>
-                    
-                    <!-- 검색 결과 -->
-                    <div class="branch-search-results hidden" id="branch-search-results">
-                        <div class="branch-list" id="branch-list">
-                            <!-- 검색 결과가 동적으로 추가됨 -->
-                        </div>
-                    </div>
-                    
-                    <div class="error-message" id="branch-error"></div>
-                </div>
             </div>
             <div class="modal-footer">
                 <button class="btn-secondary" id="cancel-btn">취소</button>
                 <button class="btn-primary" id="create-group-btn">만들기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 초대 목록 모달 -->
+    <div class="modal hidden" id="invitations-modal">
+        <div class="modal-overlay" id="invitations-modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>받은 초대</h2>
+                <button class="modal-close" id="invitations-modal-close">×</button>
+            </div>
+            <div class="modal-body">
+                <div id="invitations-list">
+                    <!-- 초대 카드들이 동적으로 추가됨 -->
+                </div>
+                <div class="empty-invitations hidden" id="empty-invitations">
+                    <p>받은 초대가 없습니다.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="close-invitations-btn">닫기</button>
             </div>
         </div>
     </div>
