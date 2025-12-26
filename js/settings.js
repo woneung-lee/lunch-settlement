@@ -8,6 +8,7 @@ let myRole = null;
 const backBtn = document.getElementById('back-btn');
 const loadingState = document.getElementById('loading-state');
 const settingsContainer = document.getElementById('settings-container');
+const memberManagementSection = document.getElementById('member-management');
 
 // 하단 네비게이션
 const navHome = document.getElementById('nav-home');
@@ -52,6 +53,10 @@ const inviteUserIdInput = document.getElementById('invite-user-id');
 const inviteError = document.getElementById('invite-error');
 const inviteCancelBtn = document.getElementById('invite-cancel-btn');
 const sendInviteBtn = document.getElementById('send-invite-btn');
+
+// 방장 위임
+const transferOwnerSelect = document.getElementById('transfer-owner-select');
+const transferOwnerBtn = document.getElementById('transfer-owner-btn');
 
 // 초대 현황 모달
 const inviteStatusModal = document.getElementById('invite-status-modal');
@@ -131,15 +136,30 @@ async function loadSettings() {
         groupData = { id: groupDoc.id, ...groupDoc.data() };
         
         // 내 권한 확인
-        const memberDoc = await db.collection('groups').doc(groupId)
-            .collection('groupMembers').doc(currentUser.uid).get();
-        
+        const memberRef = db.collection('groups').doc(groupId)
+            .collection('groupMembers').doc(currentUser.uid);
+        const memberDoc = await memberRef.get();
+
         if (memberDoc.exists) {
             myRole = memberDoc.data().role;
         } else {
-            alert('그룹에 접근 권한이 없습니다.');
-            window.location.href = 'groups.html';
-            return;
+            // (중요) 기존 그룹 데이터와의 호환: 과거에는 groupMembers를 만들지 않은 상태로 그룹이 생성됨
+            // 그룹 문서의 ownerId와 현재 사용자 UID가 같으면 자동으로 방장 멤버십을 복구 생성
+            if (groupData.ownerId === currentUser.uid) {
+                const userId = (currentUser.email || '').split('@')[0];
+                await memberRef.set({
+                    role: 'owner',
+                    userId: currentUser.userData?.userId || userId,
+                    email: currentUser.email || '',
+                    joinedAt: timestamp(),
+                    updatedAt: timestamp()
+                });
+                myRole = 'owner';
+            } else {
+                alert('그룹에 접근 권한이 없습니다.');
+                window.location.href = 'groups.html';
+                return;
+            }
         }
         
         // 그룹원 수 카운트
@@ -164,6 +184,11 @@ async function loadSettings() {
             restaurantsCount: restaurantsSnapshot.size,
             mealsCount: mealsSnapshot.size
         });
+
+        // 방장 위임 옵션 로드(방장만)
+        if (myRole === 'owner') {
+            await loadTransferOwnerOptions();
+        }
         
         showSettings();
         
@@ -224,11 +249,85 @@ function renderSettings(group, user, counts) {
     
     // 방장 권한 체크 - 위험 영역(그룹 삭제)은 방장에게만 표시
     const dangerZone = document.getElementById('danger-zone');
+
     if (myRole === 'owner') {
-        dangerZone.classList.remove('hidden');
+        if (dangerZone) dangerZone.classList.remove('hidden');
+        if (memberManagementSection) memberManagementSection.classList.remove('hidden');
     } else {
-        dangerZone.classList.add('hidden');
+        if (dangerZone) dangerZone.classList.add('hidden');
+        if (memberManagementSection) memberManagementSection.classList.add('hidden');
     }
+}
+
+// ===== 방장 위임 옵션 로드 =====
+async function loadTransferOwnerOptions() {
+    if (!transferOwnerSelect) return;
+    transferOwnerSelect.innerHTML = '<option value="">위임할 멤버를 선택하세요</option>';
+
+    try {
+        const snapshot = await db.collection('groups').doc(groupId)
+            .collection('groupMembers')
+            .orderBy('joinedAt', 'desc')
+            .get();
+
+        snapshot.forEach(doc => {
+            if (doc.id === currentUser.uid) return; // 본인은 제외
+            const d = doc.data() || {};
+            const label = d.userId || d.email || doc.id;
+            const opt = document.createElement('option');
+            opt.value = doc.id; // uid
+            opt.textContent = label;
+            transferOwnerSelect.appendChild(opt);
+        });
+    } catch (e) {
+        console.error('방장 위임 옵션 로드 오류:', e);
+    }
+}
+
+// ===== 방장 위임 =====
+if (transferOwnerBtn) {
+    transferOwnerBtn.addEventListener('click', async () => {
+        if (myRole !== 'owner') {
+            alert('방장만 방장을 위임할 수 있습니다.');
+            return;
+        }
+        const newOwnerUid = transferOwnerSelect?.value;
+        if (!newOwnerUid) {
+            alert('위임할 멤버를 선택해주세요.');
+            return;
+        }
+
+        if (!confirm('선택한 멤버에게 방장 권한을 위임하시겠습니까?')) return;
+
+        transferOwnerBtn.disabled = true;
+        transferOwnerBtn.textContent = '처리 중...';
+
+        try {
+            const groupRef = db.collection('groups').doc(groupId);
+            const oldOwnerRef = groupRef.collection('groupMembers').doc(currentUser.uid);
+            const newOwnerRef = groupRef.collection('groupMembers').doc(newOwnerUid);
+
+            await db.runTransaction(async (tx) => {
+                const newOwnerSnap = await tx.get(newOwnerRef);
+                if (!newOwnerSnap.exists) {
+                    throw new Error('대상 멤버가 그룹 멤버가 아닙니다.');
+                }
+
+                tx.update(groupRef, { ownerId: newOwnerUid, updatedAt: timestamp() });
+                tx.update(oldOwnerRef, { role: 'member', updatedAt: timestamp() });
+                tx.update(newOwnerRef, { role: 'owner', updatedAt: timestamp() });
+            });
+
+            alert('방장 위임이 완료되었습니다.');
+            window.location.reload();
+        } catch (error) {
+            console.error('방장 위임 오류:', error);
+            alert('방장 위임 중 오류가 발생했습니다.');
+        } finally {
+            transferOwnerBtn.disabled = false;
+            transferOwnerBtn.textContent = '방장 위임';
+        }
+    });
 }
 
 // ===== 멤버 초대 모달 열기 =====
@@ -250,6 +349,10 @@ inviteCancelBtn.addEventListener('click', closeInviteModal);
 
 // ===== 멤버 초대 발송 =====
 sendInviteBtn.addEventListener('click', async () => {
+    if (myRole !== 'owner') {
+        alert('방장만 멤버를 초대할 수 있습니다.');
+        return;
+    }
     hideError(inviteError);
     
     const userId = inviteUserIdInput.value.trim();
@@ -290,13 +393,14 @@ sendInviteBtn.addEventListener('click', async () => {
         }
         
         // 이미 초대한 사용자인지 확인
+        // (복합 인덱스 요구를 피하기 위해) WHERE는 최소로 하고, 상태는 클라이언트에서 판정
         const existingInvite = await db.collection('groupInvitations')
             .where('groupId', '==', groupId)
             .where('invitedUserId', '==', targetUserId)
-            .where('status', '==', 'pending')
             .get();
-        
-        if (!existingInvite.empty) {
+
+        const hasPending = existingInvite.docs.some(d => (d.data() || {}).status === 'pending');
+        if (hasPending) {
             showError(inviteError, '이미 초대한 사용자입니다.');
             sendInviteBtn.disabled = false;
             sendInviteBtn.textContent = '초대 발송';
@@ -329,6 +433,10 @@ sendInviteBtn.addEventListener('click', async () => {
 
 // ===== 초대 현황 모달 열기 =====
 viewInvitesBtn.addEventListener('click', async () => {
+    if (myRole !== 'owner') {
+        alert('방장만 초대 현황을 확인할 수 있습니다.');
+        return;
+    }
     inviteStatusModal.classList.remove('hidden');
     await loadSentInvitations();
 });
@@ -345,9 +453,9 @@ statusCloseBtn.addEventListener('click', closeInviteStatusModal);
 // ===== 보낸 초대 목록 로드 =====
 async function loadSentInvitations() {
     try {
+        // (복합 인덱스 요구를 피하기 위해) 정렬은 클라이언트에서 수행
         const snapshot = await db.collection('groupInvitations')
             .where('groupId', '==', groupId)
-            .orderBy('createdAt', 'desc')
             .get();
         
         inviteStatusList.innerHTML = '';
@@ -359,8 +467,14 @@ async function loadSentInvitations() {
         
         emptySentInvitations.classList.add('hidden');
         
-        snapshot.forEach(doc => {
-            const invite = { id: doc.id, ...doc.data() };
+        const invites = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        invites.sort((a, b) => {
+            const at = a.createdAt?.toMillis?.() || 0;
+            const bt = b.createdAt?.toMillis?.() || 0;
+            return bt - at;
+        });
+
+        invites.forEach(invite => {
             const item = createInvitationItem(invite);
             inviteStatusList.appendChild(item);
         });
@@ -610,3 +724,4 @@ document.addEventListener('keydown', (e) => {
 backBtn.addEventListener('click', () => {
     window.location.href = `home.html?groupId=${groupId}`;
 });
+
