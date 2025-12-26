@@ -58,20 +58,6 @@
                     </div>
                 </div>
 
-                <!-- 멤버 관리 섹션 -->
-                <div class="settings-section">
-                    <div class="section-header-with-btn">
-                        <h3>멤버 관리</h3>
-                        <button class="btn-invite" id="invite-member-btn">멤버 초대</button>
-                    </div>
-                    <div id="group-members-list">
-                        <!-- 멤버 목록이 동적으로 추가됨 -->
-                    </div>
-                    <button class="btn-view-invitations" id="invite-status-btn">
-                        초대 현황 확인
-                    </button>
-                </div>
-
                 <!-- 계정 정보 -->
                 <div class="settings-section">
                     <h3>계정 정보</h3>
@@ -85,8 +71,15 @@
                     </div>
                 </div>
 
+                <!-- 멤버 관리 (방장 전용) -->
+                <div class="settings-section" id="member-management">
+                    <h3>멤버 관리</h3>
+                    <button class="btn-primary" id="invite-member-btn">멤버 초대</button>
+                    <button class="btn-secondary" id="view-invites-btn" style="margin-top: 8px;">초대 현황</button>
+                </div>
+
                 <!-- 위험 영역 -->
-                <div class="settings-section danger-zone" id="danger-zone">
+                <div class="settings-section danger-zone hidden" id="danger-zone">
                     <h3>⚠️ 위험 영역</h3>
                     <div class="danger-warning">
                         <p>그룹을 삭제하면 <strong>모든 데이터가 영구적으로 삭제</strong>되며 복구할 수 없습니다.</p>
