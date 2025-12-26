@@ -111,6 +111,129 @@
     font-size: 15px;
 }
 
+/* ===== 받은 초대 ===== */
+.invitations-section {
+    margin-bottom: 24px;
+    background: var(--bg-white);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    padding: 18px;
+    border: 1px solid var(--border);
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.section-header h2 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.count-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: var(--primary);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.invitations-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.invite-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--bg-main);
+}
+
+.invite-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.invite-group-name {
+    font-weight: 700;
+    color: var(--text-dark);
+    font-size: 14px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.invite-meta {
+    color: var(--text-medium);
+    font-size: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.invite-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.btn-invite {
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--bg-white);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 700;
+    transition: all 0.2s ease;
+}
+
+.btn-invite-accept {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.btn-invite-accept:hover {
+    background: var(--primary);
+    color: #fff;
+}
+
+.btn-invite-decline {
+    color: var(--text-medium);
+}
+
+.btn-invite-decline:hover {
+    background: #fff;
+    border-color: var(--text-light);
+}
+
+.no-groups-message {
+    text-align: center;
+    padding: 22px 12px 30px;
+    color: var(--text-medium);
+    font-size: 14px;
+}
+
 /* ===== 그룹 그리드 ===== */
 .groups-grid {
     display: grid;
@@ -534,3 +657,4 @@
         padding: 12px 20px 20px;
     }
 }
+
