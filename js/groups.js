@@ -7,12 +7,6 @@ const emptyState = document.getElementById('empty-state');
 const groupsContainer = document.getElementById('groups-container');
 const groupsGrid = document.getElementById('groups-grid');
 
-// 받은 초대
-const invitationsSection = document.getElementById('invitations-section');
-const invitationsList = document.getElementById('invitations-list');
-const invitationCount = document.getElementById('invitation-count');
-const noGroupsMessage = document.getElementById('no-groups-message');
-
 // 모달 요소
 const createGroupModal = document.getElementById('create-group-modal');
 const modalOverlay = document.getElementById('modal-overlay');
@@ -59,27 +53,22 @@ auth.onAuthStateChanged(async (user) => {
     // 지점 목록 로드
     await loadBranches();
     
-    // 대시보드(초대함 + 그룹 목록) 로드
+    // 그룹 목록 로드
     loadGroups();
+    loadReceivedInvitations();
 });
 
 // ===== 지점 목록 로드 =====
 async function loadBranches() {
     try {
-        // 2개 이상 orderBy는 복합 인덱스가 필요할 수 있으므로, 1차 조회 후 클라이언트 정렬
         const snapshot = await db.collection('branches')
             .orderBy('level')
+            .orderBy('name')
             .get();
         
         branches = [];
-        snapshot.forEach(doc => branches.push({ id: doc.id, ...doc.data() }));
-
-        // 동일 level 내에서는 이름순 정렬
-        branches.sort((a, b) => {
-            const la = a.level ?? 0;
-            const lb = b.level ?? 0;
-            if (la !== lb) return la - lb;
-            return String(a.name || '').localeCompare(String(b.name || ''), 'ko');
+        snapshot.forEach(doc => {
+            branches.push({ id: doc.id, ...doc.data() });
         });
         
         console.log(`✅ 지점 목록 로드 완료: ${branches.length}개`);
@@ -212,286 +201,204 @@ logoutBtn.addEventListener('click', async () => {
     }
 });
 
-// ===== 대시보드 로드(초대함 + 그룹 목록) =====
+// ===== 그룹 목록 로드 =====
 async function loadGroups() {
     try {
         showLoading();
-        const [invites, groups] = await Promise.all([
-            fetchPendingInvitations(),
-            fetchMyGroups()
-        ]);
 
-        renderInvitations(invites);
-        renderGroups(groups);
+        const groupsMap = new Map();
 
-        if (invites.length === 0 && groups.length === 0) {
+        // (1) 내가 참여한 그룹(방 멤버십 기준)
+        // - groups/{groupId}/groupMembers/{uid} 문서에 userId 필드가 있어야 조회 가능
+        const membershipSnap = await db.collectionGroup('groupMembers')
+            .where('userId', '==', currentUser.uid)
+            .get();
+
+        for (const gmDoc of membershipSnap.docs) {
+            const groupRef = gmDoc.ref.parent.parent; // groups/{groupId}
+            if (!groupRef) continue;
+
+            const gid = groupRef.id;
+            groupsMap.set(gid, { id: gid, _membership: gmDoc.data() || {} });
+        }
+
+        // (2) 구버전 보정: ownerId == 나 인 그룹은 방장 멤버십이 없을 수 있으므로 보완
+        const ownerSnap = await db.collection('groups')
+            .where('ownerId', '==', currentUser.uid)
+            .get();
+
+        for (const doc of ownerSnap.docs) {
+            const gid = doc.id;
+            const g = { id: gid, ...doc.data() };
+            groupsMap.set(gid, g);
+
+            const gmRef = db.collection('groups').doc(gid).collection('groupMembers').doc(currentUser.uid);
+            const gmExists = await gmRef.get();
+            if (!gmExists.exists) {
+                await gmRef.set({
+                    userId: currentUser.uid,
+                    role: 'owner',
+                    groupId: gid,
+                    joinedAt: timestamp()
+                }, { merge: true });
+            }
+        }
+
+        // (3) 그룹 정보 로드(멤버십으로만 잡힌 그룹은 그룹 문서를 추가 조회)
+        const groupsArr = [];
+        for (const [gid, val] of groupsMap.entries()) {
+            if (val.groupName) {
+                groupsArr.push(val);
+                continue;
+            }
+            const groupDoc = await db.collection('groups').doc(gid).get();
+            if (groupDoc.exists) {
+                groupsArr.push({ id: gid, ...groupDoc.data() });
+            }
+        }
+
+        // createdAt 기준 정렬(클라이언트 정렬로 인덱스 요구 회피)
+        groupsArr.sort((a, b) => {
+            const at = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+            const bt = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+            return bt - at;
+        });
+
+        if (groupsArr.length === 0) {
             showEmptyState();
             return;
         }
 
+        groupsGrid.innerHTML = '';
+        groupsArr.forEach(group => {
+            const card = createGroupCard(group);
+            groupsGrid.appendChild(card);
+        });
+
         showGroupsList();
     } catch (error) {
-        console.error('대시보드 로드 오류:', error);
-        alert('데이터를 불러오는 중 오류가 발생했습니다.');
+        console.error('그룹 목록 로드 오류:', error);
+        alert('그룹 목록을 불러오는 중 오류가 발생했습니다.');
         showEmptyState();
     }
 }
 
+
 // ===== 받은 초대 로드 =====
-async function fetchPendingInvitations() {
+async function loadReceivedInvitations() {
+    const section = document.getElementById('received-invites-section');
+    const listEl = document.getElementById('received-invites-list');
+    const emptyEl = document.getElementById('received-invites-empty');
+
+    if (!section || !listEl || !emptyEl) return;
+
     try {
-        // (복합 인덱스 요구를 피하기 위해) invitedUserId만 조건으로 조회 후 status는 클라이언트에서 필터
-        const snapshot = await db.collection('groupInvitations')
+        const snap = await db.collection('groupInvitations')
             .where('invitedUserId', '==', currentUser.uid)
             .get();
 
-        const invites = snapshot.docs.map(d => ({ id: d.id, ...d.data() }))
-            .filter(i => i.status === 'pending');
+        const invites = [];
+        snap.forEach(doc => {
+            const inv = { id: doc.id, ...doc.data() };
+            if (inv.status === 'pending') invites.push(inv);
+        });
+
+        if (invites.length === 0) {
+            section.classList.add('hidden');
+            return;
+        }
+
+        section.classList.remove('hidden');
+        listEl.innerHTML = '';
 
         invites.sort((a, b) => {
-            const at = a.createdAt?.toMillis?.() || 0;
-            const bt = b.createdAt?.toMillis?.() || 0;
+            const at = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+            const bt = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
             return bt - at;
         });
 
-        return invites;
+        invites.forEach(inv => {
+            const card = document.createElement('div');
+            card.className = 'invite-card';
+            card.innerHTML = `
+                <div class="invite-info">
+                    <div class="invite-group-name">${escapeHtml(inv.groupName || '그룹')}</div>
+                    <div class="invite-meta">
+                        초대자: ${escapeHtml(inv.inviterUserId || '-')}
+                    </div>
+                </div>
+                <div class="invite-actions">
+                    <button class="btn-secondary btn-invite-decline" data-invite-id="${inv.id}">거절</button>
+                    <button class="btn-primary btn-invite-accept" data-invite-id="${inv.id}" data-group-id="${escapeHtml(inv.groupId || '')}">수락</button>
+                </div>
+            `;
+            listEl.appendChild(card);
+        });
+
+        emptyEl.classList.add('hidden');
+
+        // 이벤트 바인딩
+        listEl.querySelectorAll('.btn-invite-accept').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const inviteId = btn.dataset.inviteId;
+                const gid = btn.dataset.groupId;
+                if (!inviteId || !gid) return;
+                await acceptInvitation(inviteId, gid);
+            });
+        });
+
+        listEl.querySelectorAll('.btn-invite-decline').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const inviteId = btn.dataset.inviteId;
+                if (!inviteId) return;
+                await declineInvitation(inviteId);
+            });
+        });
+
     } catch (e) {
         console.error('받은 초대 로드 오류:', e);
-        return [];
+        // 받은 초대는 부가 기능이므로, 실패 시 섹션 숨김
+        section.classList.add('hidden');
     }
 }
 
-// ===== 내 그룹 로드(방장/멤버 모두) =====
-async function fetchMyGroups() {
-    const uid = currentUser.uid;
-
-    const myMembershipByGroupId = new Map();
-
-    // 1) groupMembers(컬렉션그룹)에서 내 멤버십 조회
+async function acceptInvitation(inviteId, gid) {
     try {
-        const memberSnap = await db.collectionGroup('groupMembers')
-            .where(firebase.firestore.FieldPath.documentId(), '==', uid)
-            .get();
+        // 방 멤버십 생성
+        await db.collection('groups').doc(gid).collection('groupMembers').doc(currentUser.uid).set({
+            userId: currentUser.uid,
+            role: 'member',
+            groupId: gid,
+            joinedAt: timestamp()
+        }, { merge: true });
 
-        memberSnap.forEach(doc => {
-            const groupId = doc.ref.parent.parent.id; // groups/{groupId}/groupMembers/{uid}
-            myMembershipByGroupId.set(groupId, { uid, ...(doc.data() || {}) });
-        });
-    } catch (e) {
-        console.warn('groupMembers 컬렉션그룹 조회 실패(환경/권한에 따라 다를 수 있음):', e);
-    }
-
-    // 2) 과거 데이터 호환: ownerId 기반으로 생성된 그룹(멤버십 미생성)을 보완
-    try {
-        const ownedSnap = await db.collection('groups').where('ownerId', '==', uid).get();
-        const ownerUserId = currentUser.userData?.userId || (currentUser.email || '').split('@')[0];
-
-        const fixPromises = [];
-        ownedSnap.forEach(g => {
-            const gid = g.id;
-            if (!myMembershipByGroupId.has(gid)) {
-                // owner 멤버십 자동 생성(권한/설정 페이지 진입을 위해)
-                const memberRef = db.collection('groups').doc(gid).collection('groupMembers').doc(uid);
-                fixPromises.push(
-                    memberRef.set({
-                        role: 'owner',
-                        userId: ownerUserId,
-                        email: currentUser.email || '',
-                        joinedAt: timestamp(),
-                        updatedAt: timestamp()
-                    }, { merge: true })
-                    .then(() => myMembershipByGroupId.set(gid, { role: 'owner', userId: ownerUserId, email: currentUser.email || '' }))
-                    .catch(() => {})
-                );
-            }
-        });
-        if (fixPromises.length) await Promise.all(fixPromises);
-    } catch (e) {
-        console.error('ownerId 기반 그룹 보완 조회 오류:', e);
-    }
-
-    const groupIds = Array.from(myMembershipByGroupId.keys());
-    if (groupIds.length === 0) return [];
-
-    // 3) 그룹 문서 로드
-    const groupDocs = await Promise.all(
-        groupIds.map(id => db.collection('groups').doc(id).get().catch(() => null))
-    );
-
-    const groups = [];
-    for (const doc of groupDocs) {
-        if (!doc || !doc.exists) continue;
-        const data = doc.data() || {};
-        const membership = myMembershipByGroupId.get(doc.id) || {};
-        groups.push({
-            id: doc.id,
-            ...data,
-            myRole: membership.role || 'member'
-        });
-    }
-
-    groups.sort((a, b) => {
-        const at = a.createdAt?.toMillis?.() || 0;
-        const bt = b.createdAt?.toMillis?.() || 0;
-        return bt - at;
-    });
-
-    return groups;
-}
-
-// ===== 받은 초대 렌더링 =====
-function renderInvitations(invites) {
-    if (!invitationsSection || !invitationsList) return;
-
-    invitationsList.innerHTML = '';
-
-    if (!invites || invites.length === 0) {
-        invitationsSection.classList.add('hidden');
-        if (invitationCount) invitationCount.classList.add('hidden');
-        return;
-    }
-
-    invitationsSection.classList.remove('hidden');
-
-    if (invitationCount) {
-        invitationCount.textContent = String(invites.length);
-        invitationCount.classList.remove('hidden');
-    }
-
-    invites.forEach(invite => {
-        invitationsList.appendChild(createInviteCard(invite));
-    });
-}
-
-function createInviteCard(invite) {
-    const card = document.createElement('div');
-    card.className = 'invite-card';
-
-    const groupName = invite.groupName || '그룹';
-    const inviter = invite.inviterName || '방장';
-    const created = invite.createdAt ? new Date(invite.createdAt.toDate()).toLocaleDateString('ko-KR') : '';
-
-    card.innerHTML = `
-        <div class="invite-info">
-            <div class="invite-group-name">${escapeHtml(groupName)}</div>
-            <div class="invite-meta">
-                <span>초대자: ${escapeHtml(inviter)}</span>
-                ${created ? `<span>• ${created}</span>` : ''}
-            </div>
-        </div>
-        <div class="invite-actions">
-            <button class="btn-invite btn-invite-accept">수락</button>
-            <button class="btn-invite btn-invite-decline">거절</button>
-        </div>
-    `;
-
-    const acceptBtn = card.querySelector('.btn-invite-accept');
-    const declineBtn = card.querySelector('.btn-invite-decline');
-
-    acceptBtn.addEventListener('click', () => acceptInvitation(invite, acceptBtn, declineBtn));
-    declineBtn.addEventListener('click', () => declineInvitation(invite, acceptBtn, declineBtn));
-
-    return card;
-}
-
-// ===== 초대 수락/거절 =====
-async function acceptInvitation(invite, acceptBtn, declineBtn) {
-    if (!confirm(`"${invite.groupName || '그룹'}" 초대를 수락하시겠습니까?`)) return;
-
-    acceptBtn.disabled = true;
-    declineBtn.disabled = true;
-    acceptBtn.textContent = '처리 중...';
-
-    try {
-        const invRef = db.collection('groupInvitations').doc(invite.id);
-        const groupRef = db.collection('groups').doc(invite.groupId);
-        const memberRef = groupRef.collection('groupMembers').doc(currentUser.uid);
-
-        const myUserId = currentUser.userData?.userId || (currentUser.email || '').split('@')[0];
-
-        await db.runTransaction(async (tx) => {
-            const invSnap = await tx.get(invRef);
-            if (!invSnap.exists) throw new Error('초대장이 존재하지 않습니다.');
-
-            const invData = invSnap.data() || {};
-            if (invData.invitedUserId !== currentUser.uid) throw new Error('초대 대상이 아닙니다.');
-            if (invData.status !== 'pending') throw new Error('이미 처리된 초대장입니다.');
-
-            const groupSnap = await tx.get(groupRef);
-            if (!groupSnap.exists) throw new Error('그룹이 존재하지 않습니다.');
-
-            const memberSnap = await tx.get(memberRef);
-            if (!memberSnap.exists) {
-                tx.set(memberRef, {
-                    role: 'member',
-                    userId: myUserId,
-                    email: currentUser.email || '',
-                    joinedAt: timestamp(),
-                    updatedAt: timestamp()
-                }, { merge: true });
-            }
-
-            tx.update(invRef, { status: 'accepted', respondedAt: timestamp() });
+        // 초대 상태 변경
+        await db.collection('groupInvitations').doc(inviteId).update({
+            status: 'accepted',
+            respondedAt: timestamp()
         });
 
-        alert('초대를 수락했습니다.');
+        await loadReceivedInvitations();
         await loadGroups();
+    loadReceivedInvitations();
     } catch (e) {
         console.error('초대 수락 오류:', e);
         alert('초대 수락 중 오류가 발생했습니다.');
-        acceptBtn.disabled = false;
-        declineBtn.disabled = false;
-        acceptBtn.textContent = '수락';
     }
 }
 
-async function declineInvitation(invite, acceptBtn, declineBtn) {
-    if (!confirm(`"${invite.groupName || '그룹'}" 초대를 거절하시겠습니까?`)) return;
-
-    acceptBtn.disabled = true;
-    declineBtn.disabled = true;
-    declineBtn.textContent = '처리 중...';
-
+async function declineInvitation(inviteId) {
     try {
-        const invRef = db.collection('groupInvitations').doc(invite.id);
-
-        await db.runTransaction(async (tx) => {
-            const invSnap = await tx.get(invRef);
-            if (!invSnap.exists) throw new Error('초대장이 존재하지 않습니다.');
-
-            const invData = invSnap.data() || {};
-            if (invData.invitedUserId !== currentUser.uid) throw new Error('초대 대상이 아닙니다.');
-            if (invData.status !== 'pending') throw new Error('이미 처리된 초대장입니다.');
-
-            tx.update(invRef, { status: 'declined', respondedAt: timestamp() });
+        await db.collection('groupInvitations').doc(inviteId).update({
+            status: 'declined',
+            respondedAt: timestamp()
         });
 
-        alert('초대를 거절했습니다.');
-        await loadGroups();
+        await loadReceivedInvitations();
     } catch (e) {
         console.error('초대 거절 오류:', e);
         alert('초대 거절 중 오류가 발생했습니다.');
-        acceptBtn.disabled = false;
-        declineBtn.disabled = false;
-        declineBtn.textContent = '거절';
     }
-}
-
-// ===== 그룹 목록 렌더링 =====
-function renderGroups(groups) {
-    groupsGrid.innerHTML = '';
-
-    if (!groups || groups.length === 0) {
-        if (noGroupsMessage) noGroupsMessage.classList.remove('hidden');
-        return;
-    }
-
-    if (noGroupsMessage) noGroupsMessage.classList.add('hidden');
-
-    groups.forEach(group => {
-        const card = createGroupCard(group);
-        groupsGrid.appendChild(card);
-    });
 }
 
 // ===== 그룹 카드 생성 =====
@@ -650,22 +557,19 @@ createGroupBtn.addEventListener('click', async () => {
             updatedAt: timestamp()
         });
 
-        // 방 멤버십(권한) 생성: 방장은 owner
-        // settings.html 등에서 그룹 접근 권한은 groupMembers 기준으로 판단함
-        const ownerUserId = currentUser.userData?.userId || currentUser.email.split('@')[0];
+        // 방 멤버십(권한) 생성: 방장(owner)
         await db.collection('groups').doc(groupRef.id)
-            .collection('groupMembers')
-            .doc(currentUser.uid)
+            .collection('groupMembers').doc(currentUser.uid)
             .set({
+                userId: currentUser.uid,
                 role: 'owner',
-                userId: ownerUserId,
-                email: currentUser.email,
-                joinedAt: timestamp(),
-                updatedAt: timestamp()
-            });
+                groupId: groupRef.id,
+                joinedAt: timestamp()
+            }, { merge: true });
+
         
         // 총무를 그룹원으로 자동 추가
-        const userId = ownerUserId;
+        const userId = currentUser.userData?.userId || currentUser.email.split('@')[0];
         await db.collection('groups').doc(groupRef.id).collection('members').add({
             name: userId,
             createdAt: timestamp()
@@ -676,6 +580,7 @@ createGroupBtn.addEventListener('click', async () => {
         
         // 그룹 목록 새로고침
         loadGroups();
+    loadReceivedInvitations();
         
     } catch (error) {
         console.error('그룹 생성 오류:', error);
