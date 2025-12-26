@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>맛집 목록 - 점심 정산</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/branch-restaurants.css">
+</head>
+<body>
+    <div class="page-container-embedded">
+        <!-- 지점 선택 -->
+        <div class="branch-selector">
+            <label for="branch-select">지점 선택</label>
+            <select id="branch-select">
+                <option value="">지점을 선택하세요</option>
+            </select>
+        </div>
+
+        <!-- 로딩 상태 -->
+        <div class="loading-state" id="loading-state">
+            <div class="spinner"></div>
+            <p>맛집 목록을 불러오는 중...</p>
+        </div>
+
+        <!-- 빈 상태 -->
+        <div class="empty-state hidden" id="empty-state">
+            <div class="empty-icon">🍽️</div>
+            <h2>아직 공유된 맛집이 없어요</h2>
+            <p>맛집을 공유하여 정보를 나누세요!</p>
+        </div>
+
+        <!-- 맛집 목록 -->
+        <div class="restaurants-container hidden" id="restaurants-container">
+            <div class="restaurants-list" id="restaurants-list">
+                <!-- 맛집 카드들이 동적으로 추가됨 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <!-- 앱 스크립트 -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/branch-restaurants.js"></script>
+</body>
+</html>
