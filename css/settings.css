@@ -56,7 +56,7 @@
 .main-content {
     max-width: 800px;
     margin: 0 auto;
-    padding: 24px 20px 60px;
+    padding: 24px 20px 100px;
 }
 
 /* ===== 로딩 상태 ===== */
@@ -100,6 +100,206 @@
     margin-bottom: 20px;
     padding-bottom: 12px;
     border-bottom: 2px solid var(--bg-main);
+}
+
+/* ===== 멤버 목록 (신규) ===== */
+.members-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.member-card {
+    background: var(--bg-main);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.member-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.member-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.member-role {
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.member-role.owner {
+    background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+    color: #fff;
+}
+
+.member-role.member {
+    background: var(--bg-white);
+    color: var(--primary);
+    border: 1px solid var(--border);
+}
+
+.member-joined {
+    font-size: 13px;
+    color: var(--text-medium);
+}
+
+.no-members {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-medium);
+    font-size: 15px;
+}
+
+/* ===== 초대 액션 버튼 (신규) ===== */
+.invite-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.btn-invite,
+.btn-invite-status {
+    flex: 1;
+    min-width: 160px;
+    padding: 14px 20px;
+    border: 2px solid var(--primary);
+    background: var(--primary);
+    color: white;
+    font-size: 15px;
+    font-weight: 700;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-invite:hover,
+.btn-invite-status:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-invite-status {
+    background: var(--bg-white);
+    color: var(--primary);
+}
+
+.btn-invite-status:hover {
+    background: var(--bg-main);
+}
+
+/* ===== 초대 현황 카드 (신규) ===== */
+.invite-status-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.invite-status-card {
+    background: var(--bg-white);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    transition: all 0.3s ease;
+}
+
+.invite-status-card.pending {
+    border-color: #FFA500;
+    background: #FFF9F0;
+}
+
+.invite-status-card.accepted {
+    border-color: var(--success);
+    background: #F0FFF8;
+}
+
+.invite-status-card.rejected {
+    border-color: var(--error);
+    background: #FFF5F5;
+}
+
+.invite-status-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.invite-to {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.status-badge.pending {
+    background: #FFA500;
+    color: white;
+}
+
+.status-badge.accepted {
+    background: var(--success);
+    color: white;
+}
+
+.status-badge.rejected {
+    background: var(--error);
+    color: white;
+}
+
+.invite-date {
+    font-size: 13px;
+    color: var(--text-medium);
+    margin-bottom: 12px;
+}
+
+.btn-cancel-invite {
+    padding: 8px 16px;
+    border: 2px solid var(--error);
+    background: var(--bg-white);
+    color: var(--error);
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-cancel-invite:hover {
+    background: var(--error);
+    color: white;
+}
+
+.no-invites,
+.loading,
+.error {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-medium);
+    font-size: 15px;
 }
 
 /* ===== 설정 아이템 ===== */
@@ -256,6 +456,10 @@
     animation: slideUp 0.3s ease-out;
 }
 
+.modal-large {
+    max-width: 600px;
+}
+
 @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
@@ -355,12 +559,21 @@
         text-align: left;
         margin: 8px 0;
     }
+    
+    .invite-actions {
+        flex-direction: column;
+    }
+    
+    .btn-invite,
+    .btn-invite-status {
+        width: 100%;
+    }
 }
 
 @media (max-width: 480px) {
-.main-content {
-    padding: 24px 20px 100px;
-}
+    .main-content {
+        padding: 24px 20px 100px;
+    }
     
     .settings-section {
         padding: 16px;
