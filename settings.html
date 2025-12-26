@@ -64,10 +64,10 @@
                         <h3>멤버 관리</h3>
                         <button class="btn-invite" id="invite-member-btn">멤버 초대</button>
                     </div>
-                    <div id="members-list">
+                    <div id="group-members-list">
                         <!-- 멤버 목록이 동적으로 추가됨 -->
                     </div>
-                    <button class="btn-view-invitations" id="view-invitations-btn">
+                    <button class="btn-view-invitations" id="invite-status-btn">
                         초대 현황 확인
                     </button>
                 </div>
@@ -86,7 +86,7 @@
                 </div>
 
                 <!-- 위험 영역 -->
-                <div class="settings-section danger-zone">
+                <div class="settings-section danger-zone" id="danger-zone">
                     <h3>⚠️ 위험 영역</h3>
                     <div class="danger-warning">
                         <p>그룹을 삭제하면 <strong>모든 데이터가 영구적으로 삭제</strong>되며 복구할 수 없습니다.</p>
@@ -179,15 +179,15 @@
     </div>
 
     <!-- 초대 현황 모달 -->
-    <div class="modal hidden" id="invitations-status-modal">
-        <div class="modal-overlay" id="invitations-status-overlay"></div>
+    <div class="modal hidden" id="invite-status-modal">
+        <div class="modal-overlay" id="status-modal-overlay"></div>
         <div class="modal-content">
             <div class="modal-header">
                 <h2>초대 현황</h2>
-                <button class="modal-close" id="invitations-status-close">×</button>
+                <button class="modal-close" id="status-modal-close">×</button>
             </div>
             <div class="modal-body">
-                <div id="sent-invitations-list">
+                <div id="invite-status-list">
                     <!-- 보낸 초대 목록이 동적으로 추가됨 -->
                 </div>
                 <div class="empty-invitations hidden" id="empty-sent-invitations">
@@ -195,7 +195,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn-secondary" id="close-invitations-status-btn">닫기</button>
+                <button class="btn-secondary" id="status-close-btn">닫기</button>
             </div>
         </div>
     </div>
