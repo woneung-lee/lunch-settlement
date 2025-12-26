@@ -544,7 +544,7 @@
     gap: 12px;
 }
 
-.order-item input, .shared-item input {
+.order-item input, select, .shared-item input, .shared-item select {
     width: 100%;
     padding: 10px 12px;
     border: 1px solid var(--border);
@@ -839,6 +839,15 @@
     font-size: 14px;
     font-weight: 900;
     color: var(--primary);
+}
+
+
+
+.order-member-select {
+    background: #fff;
+}
+.order-guest-name {
+    margin-top: 8px;
 }
 
 
