@@ -72,12 +72,51 @@ goRestaurantsBtn.addEventListener('click', () => {
 });
 
 // ===== 인증 확인 =====
+// ===== 그룹 접근 권한 확인(방 멤버십 기준) =====
+async function ensureGroupAccess(user, groupId) {
+    if (!user || !groupId) return null;
+
+    const groupRef = db.collection('groups').doc(groupId);
+    const groupDoc = await groupRef.get();
+    if (!groupDoc.exists) {
+        alert('그룹을 찾을 수 없습니다.');
+        window.location.href = 'groups.html';
+        return null;
+    }
+
+    const group = groupDoc.data() || {};
+    const gmRef = groupRef.collection('groupMembers').doc(user.uid);
+    const gmDoc = await gmRef.get();
+
+    // 정상: 방 멤버십 존재
+    if (gmDoc.exists) {
+        const gm = gmDoc.data() || {};
+        return { group, role: gm.role || 'member' };
+    }
+
+    // 구버전 데이터 보정: ownerId는 방장으로 자동 등록
+    if (group.ownerId && group.ownerId === user.uid) {
+        await gmRef.set({
+            userId: user.uid,
+            role: 'owner',
+            joinedAt: timestamp()
+        }, { merge: true });
+        return { group, role: 'owner' };
+    }
+
+    alert('해당 그룹에 대한 접근 권한이 없습니다.');
+    window.location.href = 'groups.html';
+    return null;
+}
+
 auth.onAuthStateChanged(async (user) => {
     if (!user) {
         window.location.href = 'index.html';
         return;
     }
     currentUser = user;
+    const access = await ensureGroupAccess(user, groupId);
+    if (!access) return;
     await loadRestaurants();
 });
 
@@ -404,5 +443,6 @@ startAgainBtn.addEventListener('click', () => {
         updateStartButton();
     }, 50);
 });
+
 
 
