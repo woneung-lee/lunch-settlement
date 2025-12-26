@@ -14,22 +14,26 @@
             <div class="header-content">
                 <div class="header-left">
                     <div class="logo-icon-small">🍱</div>
-                    <h1>점심 정산</h1>
+                    <h1>내 그룹</h1>
                 </div>
                 <button class="btn-logout" id="logout-btn">로그아웃</button>
             </div>
         </header>
 
-        <!-- 탭 컨테이너 -->
+        <!-- ⭐ Phase 4: 탭 컨테이너 추가 -->
         <div class="tabs-container">
-            <button class="tab-btn active" data-tab="my-groups">내 그룹</button>
-            <button class="tab-btn" data-tab="branch-restaurants">맛집 목록</button>
+            <button class="tab-btn active" data-tab="my-groups">
+                <span>내 그룹</span>
+            </button>
+            <button class="tab-btn" data-tab="branch-restaurants">
+                <span>맛집 목록</span>
+            </button>
         </div>
 
-        <!-- 메인 컨텐츠 -->
-        <main class="main-content">
-            <!-- 내 그룹 탭 -->
-            <div class="tab-content active" id="my-groups-tab">
+        <!-- ⭐ Phase 4: 내 그룹 탭 컨텐츠 -->
+        <div class="tab-content active" id="my-groups-tab">
+            <!-- 메인 컨텐츠 -->
+            <main class="main-content">
                 <!-- 로딩 상태 -->
                 <div class="loading-state" id="loading-state">
                     <div class="spinner"></div>
@@ -52,21 +56,26 @@
                         <!-- 그룹 카드들이 동적으로 추가됨 -->
                     </div>
                 </div>
-            </div>
+            </main>
 
-            <!-- 맛집 목록 탭 -->
-            <div class="tab-content" id="branch-restaurants-tab">
-                <iframe src="branch-restaurants.html" frameborder="0" style="width:100%; height:calc(100vh - 200px); border:none;"></iframe>
-            </div>
-        </main>
+            <!-- 플로팅 추가 버튼 -->
+            <button class="fab" id="fab-btn">
+                <span class="fab-icon">+</span>
+            </button>
+        </div>
 
-        <!-- 플로팅 추가 버튼 (내 그룹 탭에서만 표시) -->
-        <button class="fab" id="fab-btn">
-            <span class="fab-icon">+</span>
-        </button>
+        <!-- ⭐ Phase 4: 맛집 목록 탭 컨텐츠 -->
+        <div class="tab-content" id="branch-restaurants-tab">
+            <iframe 
+                src="branch-restaurants.html" 
+                frameborder="0" 
+                style="width: 100%; height: calc(100vh - 140px); border: none;"
+                title="맛집 목록"
+            ></iframe>
+        </div>
     </div>
 
-    <!-- 그룹 생성 모달 (기존과 동일) -->
+    <!-- 그룹 생성 모달 -->
     <div class="modal hidden" id="create-group-modal">
         <div class="modal-overlay" id="modal-overlay"></div>
         <div class="modal-content">
@@ -77,23 +86,24 @@
             <div class="modal-body">
                 <div class="form-group">
                     <label for="group-name">그룹 이름</label>
-                    <input type="text" id="group-name" placeholder="예) 개발팀, 마케팅팀, 친구들" maxlength="30">
+                    <input 
+                        type="text" 
+                        id="group-name" 
+                        placeholder="예) 개발팀, 마케팅팀, 친구들"
+                        maxlength="30"
+                    >
                     <div class="input-hint">최대 30자</div>
                     <div class="error-message" id="group-name-error"></div>
                 </div>
 
-                <!-- 지점 선택 -->
+                <!-- Phase 2: 지점 선택 -->
                 <div class="form-group">
-                    <label for="branch-search">소속 지점</label>
-                    <input type="text" id="branch-search" placeholder="지점명 검색 (예: 마포, 본점)" autocomplete="off">
-                    <div class="input-hint">검색 후 선택하세요</div>
-                    
-                    <div class="selected-branch hidden" id="selected-branch">
-                        <span id="selected-branch-name"></span>
-                        <button type="button" class="btn-change" id="change-branch-btn">변경</button>
-                    </div>
-                    
-                    <div class="branch-search-results hidden" id="branch-search-results"></div>
+                    <label for="branch-select">소속 지점</label>
+                    <select id="branch-select">
+                        <option value="">지점을 선택하세요</option>
+                        <!-- 지점 목록이 동적으로 추가됨 -->
+                    </select>
+                    <div class="error-message" id="branch-error"></div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -108,6 +118,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     
+    <!-- 앱 스크립트 -->
     <script src="js/firebase-config.js"></script>
     <script src="js/groups.js"></script>
 </body>
