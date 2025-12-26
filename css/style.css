@@ -25,6 +25,7 @@
     --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
     --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.1);
     --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.12);
+    --shadow-xl: 0 8px 32px rgba(0, 0, 0, 0.15);
     
     /* 라운드 */
     --radius-sm: 4px;
@@ -218,6 +219,53 @@ body {
     transform: none;
 }
 
+/* ===== 공통 보조 버튼(btn-secondary) ===== */
+.btn-secondary {
+    padding: 12px 24px;
+    border: 2px solid var(--border);
+    background: var(--bg-white);
+    color: var(--text-dark);
+    font-size: 15px;
+    font-weight: 600;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+    border-color: var(--text-medium);
+    background: var(--bg-main);
+}
+
+/* ===== 위험/삭제 버튼(btn-danger) ===== */
+.btn-danger {
+    padding: 12px 24px;
+    border: none;
+    background: var(--error);
+    color: white;
+    font-size: 15px;
+    font-weight: 600;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-danger:hover {
+    background: #C62E3A;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-danger:active {
+    transform: translateY(0);
+}
+
+.btn-danger:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
 /* ===== 에러 메시지 ===== */
 .error-message {
     color: var(--error);
@@ -269,32 +317,21 @@ body {
     display: none !important;
 }
 
-/* ===== 모달 하단 버튼(세로 글씨 방지) ===== */
-.modal-footer .btn-primary {
-    width: auto;   /* style.css의 .btn-primary width:100% 덮어쓰기 */
-    margin-top: 0; /* style.css의 .btn-primary margin-top 제거(모달 footer 정렬 안정) */
+/* ===== 모달 하단 버튼 스타일 개선 ===== */
+.modal-footer {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    align-items: center;
 }
 
-/* ===== 공통 보조 버튼(btn-secondary) ===== */
-.btn-secondary {
-    padding: 12px 24px;
-    border: 2px solid var(--border);
-    background: var(--bg-white);
-    color: var(--text-dark);
-    font-size: 15px;
-    font-weight: 600;
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.btn-secondary:hover {
-    border-color: var(--text-medium);
-    background: var(--bg-main);
-}
-
-.modal-footer button {
-    white-space: nowrap; /* '취소', '삭제'가 글자 단위로 줄바꿈되지 않도록 */
+.modal-footer .btn-primary,
+.modal-footer .btn-secondary,
+.modal-footer .btn-danger {
+    width: auto;
+    margin-top: 0;
+    white-space: nowrap;
+    min-width: 80px;
 }
 
 /* ===== 하단 네비게이션 탭(공통) ===== */
