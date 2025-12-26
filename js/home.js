@@ -801,7 +801,7 @@ function addSharedItem(sharedData = null) {
     sharedItem.className = 'shared-item';
     sharedItem.dataset.sharedId = sharedCounter;
     
-    const mateMembers = getMateMembers();
+    const allMembers = members;
 
     const memberCheckboxes = mateMembers.map(m => `
         <div class="member-checkbox">
