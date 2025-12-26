@@ -14,45 +14,59 @@
             <div class="header-content">
                 <div class="header-left">
                     <div class="logo-icon-small">🍱</div>
-                    <h1>내 그룹</h1>
+                    <h1>점심 정산</h1>
                 </div>
                 <button class="btn-logout" id="logout-btn">로그아웃</button>
             </div>
         </header>
 
+        <!-- 탭 컨테이너 -->
+        <div class="tabs-container">
+            <button class="tab-btn active" data-tab="my-groups">내 그룹</button>
+            <button class="tab-btn" data-tab="branch-restaurants">맛집 목록</button>
+        </div>
+
         <!-- 메인 컨텐츠 -->
         <main class="main-content">
-            <!-- 로딩 상태 -->
-            <div class="loading-state" id="loading-state">
-                <div class="spinner"></div>
-                <p>그룹 목록을 불러오는 중...</p>
-            </div>
-
-            <!-- 빈 상태 -->
-            <div class="empty-state hidden" id="empty-state">
-                <div class="empty-icon">📦</div>
-                <h2>아직 그룹이 없어요</h2>
-                <p>새로운 그룹을 만들어 점심 정산을 시작해보세요!</p>
-                <button class="btn-primary" id="create-first-group-btn">
-                    첫 그룹 만들기
-                </button>
-            </div>
-
-            <!-- 그룹 목록 -->
-            <div class="groups-container hidden" id="groups-container">
-                <div class="groups-grid" id="groups-grid">
-                    <!-- 그룹 카드들이 동적으로 추가됨 -->
+            <!-- 내 그룹 탭 -->
+            <div class="tab-content active" id="my-groups-tab">
+                <!-- 로딩 상태 -->
+                <div class="loading-state" id="loading-state">
+                    <div class="spinner"></div>
+                    <p>그룹 목록을 불러오는 중...</p>
                 </div>
+
+                <!-- 빈 상태 -->
+                <div class="empty-state hidden" id="empty-state">
+                    <div class="empty-icon">📦</div>
+                    <h2>아직 그룹이 없어요</h2>
+                    <p>새로운 그룹을 만들어 점심 정산을 시작해보세요!</p>
+                    <button class="btn-primary" id="create-first-group-btn">
+                        첫 그룹 만들기
+                    </button>
+                </div>
+
+                <!-- 그룹 목록 -->
+                <div class="groups-container hidden" id="groups-container">
+                    <div class="groups-grid" id="groups-grid">
+                        <!-- 그룹 카드들이 동적으로 추가됨 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 맛집 목록 탭 -->
+            <div class="tab-content" id="branch-restaurants-tab">
+                <iframe src="branch-restaurants.html" frameborder="0" style="width:100%; height:calc(100vh - 200px); border:none;"></iframe>
             </div>
         </main>
 
-        <!-- 플로팅 추가 버튼 -->
+        <!-- 플로팅 추가 버튼 (내 그룹 탭에서만 표시) -->
         <button class="fab" id="fab-btn">
             <span class="fab-icon">+</span>
         </button>
     </div>
 
-    <!-- 그룹 생성 모달 -->
+    <!-- 그룹 생성 모달 (기존과 동일) -->
     <div class="modal hidden" id="create-group-modal">
         <div class="modal-overlay" id="modal-overlay"></div>
         <div class="modal-content">
@@ -63,43 +77,23 @@
             <div class="modal-body">
                 <div class="form-group">
                     <label for="group-name">그룹 이름</label>
-                    <input 
-                        type="text" 
-                        id="group-name" 
-                        placeholder="예) 개발팀, 마케팅팀, 친구들"
-                        maxlength="30"
-                    >
+                    <input type="text" id="group-name" placeholder="예) 개발팀, 마케팅팀, 친구들" maxlength="30">
                     <div class="input-hint">최대 30자</div>
                     <div class="error-message" id="group-name-error"></div>
                 </div>
 
+                <!-- 지점 선택 -->
                 <div class="form-group">
-                    <label for="branch-search">소속 조직</label>
-                    <input
-                        type="text"
-                        id="branch-search"
-                        placeholder="🔍 조직명 검색 (본점, 지점명)"
-                        autocomplete="off"
-                    >
-                    <div class="input-hint">본점 또는 소속 조직을 선택하세요</div>
+                    <label for="branch-search">소속 지점</label>
+                    <input type="text" id="branch-search" placeholder="지점명 검색 (예: 마포, 본점)" autocomplete="off">
+                    <div class="input-hint">검색 후 선택하세요</div>
                     
-                    <!-- 선택된 지점 표시 -->
                     <div class="selected-branch hidden" id="selected-branch">
-                        <div class="selected-branch-info">
-                            <div class="selected-branch-name" id="selected-branch-name"></div>
-                            <div class="selected-branch-parent" id="selected-branch-parent"></div>
-                        </div>
-                        <button type="button" class="btn-change-branch" id="change-branch-btn">변경</button>
+                        <span id="selected-branch-name"></span>
+                        <button type="button" class="btn-change" id="change-branch-btn">변경</button>
                     </div>
                     
-                    <!-- 검색 결과 -->
-                    <div class="branch-search-results hidden" id="branch-search-results">
-                        <div class="branch-list" id="branch-list">
-                            <!-- 검색 결과가 동적으로 추가됨 -->
-                        </div>
-                    </div>
-                    
-                    <div class="error-message" id="branch-error"></div>
+                    <div class="branch-search-results hidden" id="branch-search-results"></div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -114,7 +108,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     
-    <!-- 앱 스크립트 -->
     <script src="js/firebase-config.js"></script>
     <script src="js/groups.js"></script>
 </body>
