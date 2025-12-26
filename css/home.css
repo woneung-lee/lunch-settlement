@@ -126,24 +126,29 @@
 .calendar-days {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 4px;
+    gap: 8px;
 }
 
+/* ⭐ 달력 셀 개선 (깔끔하게) */
 .calendar-day {
     aspect-ratio: 1;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-md);
     padding: 8px;
     cursor: pointer;
     transition: all 0.2s ease;
     background: var(--bg-white);
     position: relative;
-    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    overflow: visible;
 }
 
 .calendar-day:hover {
-    border-color: var(--primary);
-    background: var(--bg-main);
+    border-color: var(--primary-light);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+    z-index: 10;
 }
 
 .calendar-day.other-month {
@@ -155,6 +160,8 @@
 .calendar-day.other-month:hover {
     border-color: var(--border);
     background: var(--bg-main);
+    transform: none;
+    box-shadow: none;
 }
 
 .calendar-day.today {
@@ -163,38 +170,95 @@
 }
 
 .calendar-day.has-meal {
-    background: linear-gradient(135deg, #E8F0FE 0%, #FFFFFF 100%);
+    background: linear-gradient(135deg, #F0F9FF 0%, #FFFFFF 100%);
     border-color: var(--primary-light);
 }
 
+/* ⭐ 날짜 숫자 */
 .day-number {
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--text-dark);
     margin-bottom: 4px;
+    flex-shrink: 0;
 }
 
 .calendar-day.other-month .day-number {
     color: var(--text-light);
 }
 
+/* ⭐ 버튼 컨테이너 (개선됨) */
+.day-actions {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    display: flex;
+    gap: 4px;
+    z-index: 5;
+}
+
+.day-action-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(4px);
+    cursor: pointer;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    padding: 0;
+}
+
+.day-action-btn:hover {
+    transform: scale(1.15);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.day-action-btn.edit-btn {
+    background: rgba(255, 255, 255, 0.95);
+}
+
+.day-action-btn.edit-btn:hover {
+    background: #E8F0FE;
+    border-color: var(--primary);
+}
+
+.day-action-btn.delete-btn {
+    background: rgba(255, 255, 255, 0.95);
+}
+
+.day-action-btn.delete-btn:hover {
+    background: #FFE5E5;
+    border-color: var(--error);
+}
+
+/* ⭐ 배지 (깔끔하게 정리) */
 .day-badge {
     font-size: 11px;
-    color: var(--text-medium);
-    margin-top: 4px;
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding-top: 4px;
 }
 
 .restaurant-name {
-    font-weight: 600;
+    font-weight: 700;
     color: var(--primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    line-height: 1.3;
 }
 
 .total-amount {
     color: var(--accent);
-    font-weight: 700;
+    font-weight: 800;
+    font-size: 12px;
 }
 
 /* ===== 플로팅 액션 버튼 ===== */
@@ -668,8 +732,12 @@
         padding: 16px;
     }
     
+    .calendar-days {
+        gap: 4px;
+    }
+    
     .calendar-day {
-        padding: 4px;
+        padding: 6px;
     }
     
     .day-number {
@@ -678,6 +746,12 @@
     
     .day-badge {
         font-size: 10px;
+    }
+    
+    .day-action-btn {
+        width: 20px;
+        height: 20px;
+        font-size: 11px;
     }
     
     .fab {
@@ -708,51 +782,6 @@
     .field-row {
         grid-template-columns: 1fr;
     }
-}
-
-/* ===== 달력 셀 액션(수정/상세보기) ===== */
-.calendar-day {
-    position: relative;
-}
-
-.day-edit-btn {
-    position: absolute;
-    top: 6px;
-    right: 6px;
-    width: 26px;
-    height: 26px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    background: var(--bg-white);
-    cursor: pointer;
-    font-size: 14px;
-    line-height: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 5;
-}
-
-.day-edit-btn:hover {
-    background: var(--bg-main);
-    border-color: var(--text-medium);
-}
-
-.day-detail-btn {
-    margin-top: 6px;
-    width: 100%;
-    padding: 6px 8px;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    background: var(--bg-white);
-    color: var(--text-dark);
-    font-size: 11px;
-    font-weight: 700;
-    cursor: pointer;
-}
-
-.day-detail-btn:hover {
-    background: var(--bg-main);
 }
 
 /* ===== 상세보기 리스트 ===== */
@@ -793,8 +822,8 @@
 .detail-total {
     box-sizing: border-box;
     width: 100%;
-    padding: 0 6px;          /* 좌우 여백 확보(잘림 방지) */
-    overflow-wrap: anywhere; /* 긴 텍스트도 잘리지 않게 줄바꿈 */
+    padding: 0 6px;
+    overflow-wrap: anywhere;
     word-break: break-word;
 }
 
@@ -811,6 +840,5 @@
     font-weight: 900;
     color: var(--primary);
 }
-
 
 
