@@ -157,16 +157,16 @@ async function loadMembers() {
 }
 
 
-// ===== 메이트(자주 먹는 사람) 유틸 =====
-function getMateMembers() {
-    return (members || []).filter(m => m && m.isFrequent === true);
+// ===== 멤버(그룹원) 유틸 =====
+function getRegisteredMembers() {
+    // groups/{groupId}/members 컬렉션에 등록된 멤버 중, 이름이 있는 항목만 사용
+    return (members || []).filter(m => m && String(m.name || '').trim());
 }
 
-function isMateName(name) {
-    const n = String(name || '').trim();
-    if (!n) return false;
-    return getMateMembers().some(m => String(m.name || '').trim() === n);
+function getRegisteredMemberNames() {
+    return getRegisteredMembers().map(m => String(m.name || '').trim());
 }
+
 
 // 공용 메뉴에 게스트 추가(방안 A)용 카운터
 let sharedGuestCounter = 0;
@@ -754,11 +754,11 @@ function addOrderItem(orderData = null) {
         <div class="order-fields">
             <div class="form-group">
                 <label>이름</label>
-                <input type="text" class="order-member" placeholder="메이트를 선택하거나(목록) 이름을 직접 입력" list="mates-list-${orderCounter}" value="${orderData?.memberName || ''}">
-                <datalist id="mates-list-${orderCounter}">
-                    ${getMateMembers().map(m => `<option value="${escapeHtml(m.name)}">`).join('')}
+                <input type="text" class="order-member" placeholder="멤버는 목록에서 선택, 게스트는 이름 직접 입력" list="members-list-${orderCounter}" value="${orderData?.memberName || ''}">
+                <datalist id="members-list-${orderCounter}">
+                    ${getRegisteredMembers().map(m => `<option value="${escapeHtml(m.name)}">`).join('')}
                 </datalist>
-                <div class="order-helper">※ 목록에는 '메이트'만 표시됩니다. 메이트가 아닌 경우 이름을 직접 입력해 주십시오.</div>
+                <div class="order-helper">※ 목록에는 '그룹 멤버'만 표시됩니다. 게스트는 이름을 직접 입력해 주십시오.</div>
             </div>
             <div class="field-row">
                 <div class="form-group">
@@ -801,22 +801,22 @@ function addSharedItem(sharedData = null) {
     sharedItem.className = 'shared-item';
     sharedItem.dataset.sharedId = sharedCounter;
     
-    const allMembers = members;
+    const baseMembers = getRegisteredMembers();
 
-    const memberCheckboxes = mateMembers.map(m => `
+    const memberCheckboxes = baseMembers.map(m => `
         <div class="member-checkbox">
             <input type="checkbox" id="shared-${sharedCounter}-${m.id}" value="${escapeHtml(m.name)}" ${sharedData?.members?.includes(m.name) ? 'checked' : ''}>
             <label for="shared-${sharedCounter}-${m.id}">${escapeHtml(m.name)}</label>
         </div>
     `).join('');
 
-    // 기존 데이터에 '메이트 목록'에 없는 이름이 포함되어 있으면, 게스트로 표시(방안 A)
+    // 기존 데이터에 '등록 멤버' 목록에 없는 이름이 포함되어 있으면, 게스트로 표시
     const existingMembers = Array.isArray(sharedData?.members) ? sharedData.members : [];
-    const guestNames = existingMembers.filter(nm => !mateMembers.some(m => m.name === nm));
+    const baseNameSet = new Set(baseMembers.map(m => String(m.name || '').trim()));
+    const guestNames = existingMembers.filter(nm => !baseNameSet.has(String(nm || '').trim()));
 
     const guestCheckboxes = guestNames.map(nm => buildGuestCheckboxHtml(sharedCounter, nm, true)).join('');
-    
-    sharedItem.innerHTML = `
+sharedItem.innerHTML = `
         <div class="shared-item-header">
             <span class="item-number">공용 #${sharedCounter}</span>
             <button class="btn-remove-item" onclick="removeSharedItem(${sharedCounter})">×</button>
@@ -932,7 +932,7 @@ saveMealBtn.addEventListener('click', async () => {
         
         if (memberName && menu && amount > 0) {
             orders.push({ memberName, menu, amount });
-            // ※ 메이트가 아닌 인원은 '그룹원/메이트'로 자동 등록하지 않음(이름 직접 입력만 허용)
+            // ※ 등록 멤버가 아닌 인원은 자동 등록하지 않음(이름 직접 입력만 허용)
         }
     }
     
