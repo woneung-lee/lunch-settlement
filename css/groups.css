@@ -582,3 +582,124 @@
     font-size: 13px;
 }
 
+
+/* ===== 탭 ===== */
+.tabs{
+    display:flex;
+    gap:8px;
+    margin: 12px 0 16px;
+    padding: 0 2px;
+}
+.tab-btn{
+    flex:1;
+    padding:10px 12px;
+    border:1px solid #e5e7eb;
+    border-radius:12px;
+    background:#fff;
+    font-weight:700;
+    cursor:pointer;
+}
+.tab-btn.active{
+    border-color:#111827;
+}
+.tab-content.hidden{ display:none; }
+
+/* ===== 맛집(공유) ===== */
+.foodspots-controls{
+    background:#fff;
+    border:1px solid #e5e7eb;
+    border-radius:14px;
+    padding:12px;
+    margin-bottom:12px;
+}
+.foodspots-controls .form-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:10px;
+}
+.foodspots-controls .form-row:last-child{ margin-bottom:0; }
+.foodspots-controls label{
+    width:92px;
+    font-weight:700;
+    color:#374151;
+    flex:0 0 auto;
+}
+.foodspots-controls select,
+.foodspots-controls input{
+    flex:1;
+    padding:10px 12px;
+    border:1px solid #e5e7eb;
+    border-radius:12px;
+    font-size:14px;
+}
+
+.foodspots-container{
+    background:#fff;
+    border:1px solid #e5e7eb;
+    border-radius:14px;
+    padding:12px;
+}
+.foodspots-summary{
+    font-size:13px;
+    color:#6b7280;
+    margin-bottom:10px;
+}
+.foodspots-section{
+    margin-top:14px;
+}
+.foodspots-section:first-child{ margin-top:0; }
+.foodspots-section-title{
+    font-weight:800;
+    margin: 8px 0 10px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+.foodspots-section-title .count{
+    font-size:12px;
+    color:#6b7280;
+    font-weight:700;
+}
+.foodspot-item{
+    border:1px solid #f1f5f9;
+    border-radius:12px;
+    padding:12px;
+    margin-bottom:10px;
+}
+.foodspot-item:last-child{ margin-bottom:0; }
+.foodspot-top{
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+}
+.foodspot-name{
+    font-weight:800;
+    color:#111827;
+    margin-bottom:4px;
+}
+.foodspot-meta{
+    font-size:12px;
+    color:#6b7280;
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px 10px;
+}
+.badge{
+    display:inline-block;
+    padding:2px 8px;
+    border:1px solid #e5e7eb;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:700;
+    color:#374151;
+    background:#fff;
+}
+.foodspot-reason{
+    margin-top:8px;
+    font-size:13px;
+    color:#374151;
+    line-height:1.35;
+    white-space:pre-line;
+}
+
