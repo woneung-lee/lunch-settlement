@@ -264,9 +264,8 @@ function populateFoodspotsTop2Options() {
     if (!foodspotsTop2Select) return;
 
     const top1 = foodspotsTop1Select?.value || 'ALL';
-    const prev = foodspotsTop2Select.value || 'ALL';
 
-    // 기본: 상위조직=전체 → 하위조직 비활성(전체 고정)
+    // 1) 상위조직 = 전체 → 하위조직 의미 없음(전체 고정, 비활성)
     if (!top1 || top1 === 'ALL') {
         foodspotsTop2Select.innerHTML = '<option value="ALL">전체</option>';
         foodspotsTop2Select.value = 'ALL';
@@ -274,30 +273,41 @@ function populateFoodspotsTop2Options() {
         return;
     }
 
-    // 상위조직=본점(HQ) → 하위조직 없음: 본점으로 고정(비활성)
+    // 2) 상위조직 = 본점 → 하위조직 없음(본점으로 자동 고정, 비활성)
     if (hqBranch && top1 === hqBranch.id) {
-        // 본점은 하위조직(하위조직) 없음: 본점에 직접 매핑된 맛집만 노출
-        list = list.filter(r => r.branchId === hqBranch.id);
-
-    } else {
-        // 상위조직=영업본부 → 하위조직는 "전체 + (영업본부 자체) + 하위 조직(지점/센터/지원단...)"
-        const top1Branch = branchById.get(top1);
-        if (top1Branch) {
-            options.push({ value: top1Branch.id, label: top1Branch.name || '' });
-        }
-
-        const children = (childrenByParentId.get(top1) || []).filter(c => c && c.id);
-        children.sort((a, b) => (a.name || '').localeCompare((b.name || ''), 'ko'));
-        children.forEach(c => options.push({ value: c.id, label: c.name || '' }));
+        foodspotsTop2Select.innerHTML =
+            `<option value="${escapeAttr(hqBranch.id)}">${escapeHtml(hqBranch.name || '본점')}</option>`;
+        foodspotsTop2Select.value = hqBranch.id;   // ✅ 자동 고정
+        foodspotsTop2Select.disabled = true;       // ✅ 본점은 하위조직 없음
+        return;
     }
+
+    // 3) 상위조직 = 영업본부(또는 본점이 아닌 상위조직) → 하위조직 활성화 + 옵션 구성
+    const prev = foodspotsTop2Select.value || 'ALL';
+    const options = [];
+
+    // 항상 "전체" 포함
+    options.push({ value: 'ALL', label: '전체' });
+
+    // "영업본부 자체"를 따로 선택할 수 있도록 포함(= top2 === top1 이면 본부에 직접 매핑된 맛집만)
+    const top1Branch = branchById.get(top1);
+    if (top1Branch) {
+        options.push({ value: top1Branch.id, label: top1Branch.name || '' });
+    }
+
+    // 하위 조직들(지점/센터/지원단/관리단 등)
+    const children = (childrenByParentId.get(top1) || []).filter(c => c && c.id);
+    children.sort((a, b) => (a.name || '').localeCompare((b.name || ''), 'ko'));
+    children.forEach(c => options.push({ value: c.id, label: c.name || '' }));
 
     foodspotsTop2Select.innerHTML = options
         .map(o => `<option value="${escapeAttr(o.value)}">${escapeHtml(o.label || '')}</option>`)
         .join('');
 
-    // 선택값 복원
+    // 이전 선택값 복원(가능하면)
     const hasPrev = options.some(o => o.value === prev);
     foodspotsTop2Select.value = hasPrev ? prev : 'ALL';
+    foodspotsTop2Select.disabled = false; // ✅ 본점 외에는 활성
 }
 
 function splitPath(pathStr) {
