@@ -47,6 +47,80 @@ const branchError = document.getElementById('branch-error');
 // ===== 전역 변수 =====
 let currentUser = null;
 let branches = [];
+// ===== 지점 데이터 인덱싱(2뎁스 드롭다운용) =====
+let branchById = new Map();          // id -> branch
+let childrenByParentId = new Map();  // parentId -> [child branches]
+let hqBranch = null;                // level0(본점)
+let level1Branches = [];            // level1(영업본부들)
+
+function indexBranches() {
+    branchById = new Map();
+    childrenByParentId = new Map();
+    hqBranch = null;
+    level1Branches = [];
+
+    (branches || []).forEach(b => {
+        if (!b || !b.id) return;
+
+        // level 정규화(없으면 fullPath 기반으로 추정)
+        if (typeof b.level !== 'number') {
+            const parts = splitPath(b.fullPath || b.name || '');
+            b.level = Math.max(0, parts.length - 1);
+        }
+
+        branchById.set(b.id, b);
+
+        const pid = (b.parentId === undefined) ? null : b.parentId;
+        if (!childrenByParentId.has(pid)) childrenByParentId.set(pid, []);
+        childrenByParentId.get(pid).push(b);
+
+        if (b.level === 0 || b.type === '본점' || b.name === '본점') {
+            hqBranch = b;
+        }
+    });
+
+    // 본점이 명확하지 않으면 parentId가 null인 노드를 본점으로 간주
+    if (!hqBranch) {
+        hqBranch = (branches || []).find(b => b && (b.parentId === null || b.parentId === undefined)) || null;
+    }
+
+    // level1(영업본부) 목록: parentId == 본점 또는 level==1
+    level1Branches = (branches || []).filter(b => {
+        if (!b || !b.id) return false;
+        if (b.level === 1) return true;
+        if (hqBranch && b.parentId === hqBranch.id) return true;
+        return false;
+    });
+
+    level1Branches.sort((a, b) => (a.name || '').localeCompare((b.name || ''), 'ko'));
+}
+
+function escapeAttr(value) {
+    return String(value ?? '').replace(/"/g, '&quot;');
+}
+
+// sharedRestaurants용: branchId 기반으로 1뎁스(본점/영업본부 동급 1뎁스) 산출
+function getTop1BranchIdFromBranchId(branchId) {
+    const b = branchById.get(branchId);
+    if (!b) return null;
+    if (b.level === 0) return b.id;          // 본점
+    if (b.level === 1) return b.id;          // 영업본부
+    return b.parentId || null;               // 센터/지점 등(level2~)은 상위 영업본부가 1뎁스
+}
+
+function getTop1BranchNameFromBranchId(branchId) {
+    const top1Id = getTop1BranchIdFromBranchId(branchId);
+    const b = top1Id ? branchById.get(top1Id) : null;
+    return b?.name || '';
+}
+
+function getBranchDisplayName(branchId) {
+    const b = branchById.get(branchId);
+    if (!b) return '';
+    if (b.level === 0 || b.level === 1) return b.name || '';
+    const p = b.parentId ? branchById.get(b.parentId) : null;
+    return p ? `${p.name || ''} > ${b.name || ''}` : (b.name || '');
+}
 let sharedRestaurantsAll = [];
 let foodspotsLoaded = false;
 let currentMainTab = 'groups';
@@ -165,50 +239,35 @@ async function ensureFoodspotsLoaded() {
 function populateFoodspotsTop1Options() {
     if (!foodspotsTop1Select) return;
 
-    // 초기화: 기본은 전체
-    foodspotsTop1Select.innerHTML = '<option value="ALL">전체</option>';
+    const prev = foodspotsTop1Select.value || 'ALL';
 
-    const topSet = new Set();
+    let html = '<option value="ALL">전체</option>';
 
-    // branches 기반
-    branches.forEach(b => {
-        const t = getTop1NameFromPath(b.fullPath || b.name || '');
-        if (t) topSet.add(t);
+    // 1뎁스: 본점 + 영업본부(동급)
+    if (hqBranch) {
+        html += `<option value="${escapeAttr(hqBranch.id)}">${escapeHtml(hqBranch.name || '본점')}</option>`;
+    }
+    (level1Branches || []).forEach(b => {
+        // 본점 자체가 level1Branches에 포함되는 경우 중복 방지
+        if (hqBranch && b.id === hqBranch.id) return;
+        html += `<option value="${escapeAttr(b.id)}">${escapeHtml(b.name || '')}</option>`;
     });
 
-    // sharedRestaurants에만 있는 경우도 대비
-    sharedRestaurantsAll.forEach(r => {
-        const t = getTop1NameFromPath(r.branchFullPath || r.branchName || '');
-        if (t) topSet.add(t);
-    });
+    foodspotsTop1Select.innerHTML = html;
 
-    let tops = [...topSet].filter(Boolean);
-
-    // 본점 우선 정렬
-    tops.sort((a, b) => {
-        if (a === '본점') return -1;
-        if (b === '본점') return 1;
-        return a.localeCompare(b, 'ko');
-    });
-
-    tops.forEach(t => {
-        const opt = document.createElement('option');
-        opt.value = t;
-        opt.textContent = t;
-        foodspotsTop1Select.appendChild(opt);
-    });
-
-    // 기본값(전체)
-    if (!foodspotsTop1Select.value) foodspotsTop1Select.value = 'ALL';
+    // 선택값 복원
+    const hasPrev = [...foodspotsTop1Select.options].some(o => o.value === prev);
+    foodspotsTop1Select.value = hasPrev ? prev : 'ALL';
 }
 
 function populateFoodspotsTop2Options() {
     if (!foodspotsTop2Select) return;
 
-    const selectedTop1 = foodspotsTop1Select?.value || 'ALL';
+    const top1 = foodspotsTop1Select?.value || 'ALL';
+    const prev = foodspotsTop2Select.value || 'ALL';
 
-    // 1뎁스가 전체면 2뎁스는 전체만 노출(비활성)
-    if (!selectedTop1 || selectedTop1 === 'ALL') {
+    // 기본: 1뎁스=전체 → 2뎁스 비활성(전체 고정)
+    if (!top1 || top1 === 'ALL') {
         foodspotsTop2Select.innerHTML = '<option value="ALL">전체</option>';
         foodspotsTop2Select.value = 'ALL';
         foodspotsTop2Select.disabled = true;
@@ -217,50 +276,33 @@ function populateFoodspotsTop2Options() {
 
     foodspotsTop2Select.disabled = false;
 
-    const secondSet = new Set();
+    let options = [{ value: 'ALL', label: '전체' }];
 
-    // branches 기반
-    branches.forEach(b => {
-        const parts = splitPath(b.fullPath || b.name || '');
-        if ((parts[0] || '') !== selectedTop1) return;
-        if (parts.length >= 2) secondSet.add(parts[1]);
-    });
+    // 1뎁스=본점 → 2뎁스는 "전체 + 영업본부 목록"
+    if (hqBranch && top1 === hqBranch.id) {
+        (level1Branches || []).forEach(b => {
+            if (hqBranch && b.id === hqBranch.id) return;
+            options.push({ value: b.id, label: b.name || '' });
+        });
+    } else {
+        // 1뎁스=영업본부 → 2뎁스는 "전체 + (영업본부 자체) + 하위 조직(지점/센터/지원단...)"
+        const top1Branch = branchById.get(top1);
+        if (top1Branch) {
+            options.push({ value: top1Branch.id, label: top1Branch.name || '' });
+        }
 
-    // sharedRestaurants 기반(데이터 누락 대비)
-    sharedRestaurantsAll.forEach(r => {
-        const parts = splitPath(r.branchFullPath || r.branchName || '');
-        if ((parts[0] || '') !== selectedTop1) return;
-        if (parts.length >= 2) secondSet.add(parts[1]);
-    });
-
-    // 2뎁스가 하나도 없으면(경로가 없는 경우) 2뎁스 필터를 비활성
-    const seconds = [...secondSet].filter(Boolean).sort((a, b) => a.localeCompare(b, 'ko'));
-
-    const prev = foodspotsTop2Select.value || 'ALL';
-
-    // 옵션 재구성
-    foodspotsTop2Select.innerHTML = '';
-    const optAll = document.createElement('option');
-    optAll.value = 'ALL';
-    optAll.textContent = '전체';
-    foodspotsTop2Select.appendChild(optAll);
-
-    seconds.forEach(s => {
-        const opt = document.createElement('option');
-        opt.value = s;
-        opt.textContent = s;
-        foodspotsTop2Select.appendChild(opt);
-    });
-
-    // 이전 선택값 유지(가능할 때)
-    const stillExists = [...foodspotsTop2Select.options].some(o => o.value === prev);
-    foodspotsTop2Select.value = stillExists ? prev : 'ALL';
-
-    // seconds가 없으면 비활성 처리
-    if (!seconds.length) {
-        foodspotsTop2Select.disabled = true;
-        foodspotsTop2Select.value = 'ALL';
+        const children = (childrenByParentId.get(top1) || []).filter(c => c && c.id);
+        children.sort((a, b) => (a.name || '').localeCompare((b.name || ''), 'ko'));
+        children.forEach(c => options.push({ value: c.id, label: c.name || '' }));
     }
+
+    foodspotsTop2Select.innerHTML = options
+        .map(o => `<option value="${escapeAttr(o.value)}">${escapeHtml(o.label || '')}</option>`)
+        .join('');
+
+    // 선택값 복원
+    const hasPrev = options.some(o => o.value === prev);
+    foodspotsTop2Select.value = hasPrev ? prev : 'ALL';
 }
 
 function splitPath(pathStr) {
@@ -286,31 +328,38 @@ function filterFoodspotsBase() {
 
     let list = [...sharedRestaurantsAll];
 
-    // 1뎁스 필터
+    // ---- 1뎁스/2뎁스 필터(요구사항: 2단계 뎁스) ----
     if (top1 && top1 !== 'ALL') {
-        list = list.filter(r => {
-            const t1 = getTop1NameFromPath(r.branchFullPath || r.branchName || '');
-            return t1 === top1;
-        });
-
-        // 2뎁스 필터
-        if (top2 && top2 !== 'ALL') {
-            list = list.filter(r => {
-                const t2 = getTop2NameFromPath(r.branchFullPath || r.branchName || '');
-                return t2 === top2;
-            });
+        // 1뎁스=본점(HQ)
+        if (hqBranch && top1 === hqBranch.id) {
+            // 2뎁스가 특정 영업본부로 선택된 경우에만 필터(=그 영업본부 범위)
+            if (top2 && top2 !== 'ALL') {
+                list = list.filter(r => getTop1BranchIdFromBranchId(r.branchId) === top2);
+            }
+        } else {
+            // 1뎁스=영업본부(레벨1)
+            if (!top2 || top2 === 'ALL') {
+                // 전체(해당 영업본부 + 하위 조직)
+                list = list.filter(r => getTop1BranchIdFromBranchId(r.branchId) === top1);
+            } else if (top2 === top1) {
+                // 영업본부 자체(레벨1에 직접 매핑된 맛집만)
+                list = list.filter(r => r.branchId === top1);
+            } else {
+                // 특정 2뎁스(지점/센터/지원단 등)
+                list = list.filter(r => r.branchId === top2);
+            }
         }
     }
 
-    // 검색 필터
+    // ---- 검색 필터 ----
     if (q) {
         list = list.filter(r => {
             const name = (r.restaurantName || '').toLowerCase();
             const cat = (r.category || '').toLowerCase();
             const reason = (r.reason || '').toLowerCase();
-            const branch = (r.branchName || '').toLowerCase();
             const groupName = (r.groupName || '').toLowerCase();
-            return name.includes(q) || cat.includes(q) || reason.includes(q) || branch.includes(q) || groupName.includes(q);
+            const branch = (r.branchName || '').toLowerCase();
+            return name.includes(q) || cat.includes(q) || reason.includes(q) || groupName.includes(q) || branch.includes(q);
         });
     }
 
@@ -320,7 +369,7 @@ function filterFoodspotsBase() {
 function renderFoodspots() {
     if (!foodspotsLoaded) return;
 
-    // 1뎁스 변경 시 2뎁스 옵션을 동기화(사용자가 탭 이동/새로고침 했을 때도 안전)
+    // 1뎁스 변경 시 2뎁스 옵션을 동기화(탭 이동/새로고침에도 안전)
     populateFoodspotsTop2Options();
 
     const top1 = foodspotsTop1Select?.value || 'ALL';
@@ -333,19 +382,6 @@ function renderFoodspots() {
         foodspotsEmptyDesc.textContent = '음식점 관리에서 ‘소문내기’를 체크하면 여기에 표시됩니다.';
     }
 
-    // 안내(현재 필터)
-    if (foodspotsSummary) {
-        let label = '';
-        if (top1 === 'ALL') {
-            label = '전체';
-        } else if (top2 === 'ALL') {
-            label = `${top1} > 전체`;
-        } else {
-            label = `${top1} > ${top2}`;
-        }
-        foodspotsSummary.textContent = `${label} 기준 ${list.length.toLocaleString()}건`;
-    }
-
     if (!list.length) {
         showFoodspotsEmpty();
         return;
@@ -353,10 +389,24 @@ function renderFoodspots() {
 
     showFoodspotsContainer();
 
-    // 지점별로 묶어서 렌더
+    // 표시 요약
+    if (foodspotsSummary) {
+        foodspotsSummary.textContent = `총 ${list.length.toLocaleString()}건`;
+    }
+
+    // 그룹 키: 전체/본점일 때는 영업본부 단위로, 특정 영업본부 선택 시에는 지점/조직 단위로
     const map = new Map();
     list.forEach(r => {
-        const key = r.branchName || '(지점 미상)';
+        let key = '';
+        if (top1 === 'ALL' || (hqBranch && top1 === hqBranch.id)) {
+            key = getTop1BranchNameFromBranchId(r.branchId) || r.branchName || '(지점 미상)';
+        } else if (top2 === 'ALL') {
+            // 해당 영업본부 내에서 지점/조직별로 나열
+            key = (branchById.get(r.branchId)?.name) || r.branchName || '(지점 미상)';
+        } else {
+            key = (branchById.get(r.branchId)?.name) || r.branchName || '(지점 미상)';
+        }
+
         if (!map.has(key)) map.set(key, []);
         map.get(key).push(r);
     });
@@ -364,14 +414,14 @@ function renderFoodspots() {
     const keys = [...map.keys()].sort((a, b) => a.localeCompare(b, 'ko'));
     foodspotsList.innerHTML = '';
 
-    keys.forEach(branchName => {
-        const arr = map.get(branchName) || [];
+    keys.forEach(groupKey => {
+        const arr = map.get(groupKey) || [];
         const section = document.createElement('div');
         section.className = 'foodspots-section';
 
         const title = document.createElement('div');
         title.className = 'foodspots-section-title';
-        title.innerHTML = `<span>${escapeHtml(branchName)}</span><span class="count">${arr.length.toLocaleString()}건</span>`;
+        title.innerHTML = `<span>${escapeHtml(groupKey)}</span><span class="count">${arr.length.toLocaleString()}건</span>`;
         section.appendChild(title);
 
         arr.forEach(r => {
@@ -380,6 +430,7 @@ function renderFoodspots() {
 
             const dt = (r.sharedAt && r.sharedAt.toDate) ? r.sharedAt.toDate() : null;
             const dateText = dt ? formatDate(dt) : '';
+            const branchLabel = getBranchDisplayName(r.branchId) || r.branchFullPath || r.branchName || '';
 
             item.innerHTML = `
                 <div class="foodspot-top">
@@ -387,6 +438,7 @@ function renderFoodspots() {
                         <div class="foodspot-name">${escapeHtml(r.restaurantName || '')}</div>
                         <div class="foodspot-meta">
                             ${r.category ? `<span class="badge">${escapeHtml(r.category)}</span>` : ''}
+                            ${branchLabel ? `<span class="badge">${escapeHtml(branchLabel)}</span>` : ''}
                             ${r.groupName ? `<span class="badge">소문낸 그룹: ${escapeHtml(r.groupName)}</span>` : ''}
                             ${dateText ? `<span>${escapeHtml(dateText)}</span>` : ''}
                         </div>
@@ -432,18 +484,33 @@ function formatDate(date) {
 
 
 // ===== 지점 목록 로드 =====
-async function loadBranches() {
+async async function loadBranches() {
+    // 1) 정적 파일(branches.json) 우선 로드(배포/개발환경 모두 안정적으로 동일 뎁스 보장)
+    try {
+        const res = await fetch('branches.json', { cache: 'no-store' });
+        if (res.ok) {
+            branches = await res.json();
+            indexBranches();
+            console.log(`✅ 지점 목록 로드 완료(branches.json): ${branches.length}개`);
+            return;
+        }
+    } catch (e) {
+        // ignore and fallback to Firestore
+    }
+
+    // 2) Firestore fallback
     try {
         const snapshot = await db.collection('branches')
             .orderBy('fullPath')
             .get();
-        
+
         branches = [];
         snapshot.forEach(doc => {
             branches.push({ id: doc.id, ...doc.data() });
         });
-        
-        console.log(`✅ 지점 목록 로드 완료: ${branches.length}개`);
+
+        indexBranches();
+        console.log(`✅ 지점 목록 로드 완료(Firestore): ${branches.length}개`);
     } catch (error) {
         console.error('지점 목록 로드 오류:', error);
         alert('지점 목록을 불러오는 중 오류가 발생했습니다.');
