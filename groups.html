@@ -22,6 +22,16 @@
 
         <!-- 메인 컨텐츠 -->
         <main class="main-content">
+
+            <!-- 탭 -->
+            <div class="tabs" id="main-tabs">
+                <button class="tab-btn active" id="tab-btn-groups" data-tab="groups">그룹</button>
+                <button class="tab-btn" id="tab-btn-foodspots" data-tab="foodspots">맛집</button>
+            </div>
+
+            <!-- 그룹 탭 -->
+            <section class="tab-content" id="tab-content-groups">
+
             <!-- 로딩 상태 -->
             <div class="loading-state" id="loading-state">
                 <div class="spinner"></div>
@@ -54,7 +64,62 @@
                     <!-- 그룹 카드들이 동적으로 추가됨 -->
                 </div>
             </div>
-        </main>
+        
+            </section>
+
+            <!-- 맛집 탭 -->
+            <section class="tab-content hidden" id="tab-content-foodspots">
+                <div class="foodspots-controls">
+                    <div class="form-row">
+                        <label for="foodspots-scope">보기</label>
+                        <select id="foodspots-scope">
+                            <option value="all">전체</option>
+                            <option value="top1">1뎁스(본점/영업본부)</option>
+                            <option value="branch">지점별</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row hidden" id="foodspots-top1-row">
+                        <label for="foodspots-top1">1뎁스 선택</label>
+                        <select id="foodspots-top1">
+                            <option value="">선택</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row hidden" id="foodspots-branch-row">
+                        <label for="foodspots-branch">지점 선택</label>
+                        <select id="foodspots-branch">
+                            <option value="">지점을 선택하세요</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row">
+                        <label for="foodspots-search">검색</label>
+                        <input id="foodspots-search" type="text" placeholder="음식점명/카테고리/사유 검색">
+                    </div>
+                </div>
+
+                <!-- 로딩 상태 -->
+                <div class="loading-state hidden" id="foodspots-loading">
+                    <div class="spinner"></div>
+                    <p>맛집 목록을 불러오는 중...</p>
+                </div>
+
+                <!-- 빈 상태 -->
+                <div class="empty-state hidden" id="foodspots-empty">
+                    <div class="empty-icon">🍜</div>
+                    <h2 id="foodspots-empty-title">공유된 맛집이 없어요</h2>
+                    <p id="foodspots-empty-desc">음식점 관리에서 ‘소문내기’를 체크하면 여기에 표시됩니다.</p>
+                </div>
+
+                <!-- 맛집 목록 -->
+                <div class="foodspots-container hidden" id="foodspots-container">
+                    <div class="foodspots-summary" id="foodspots-summary"></div>
+                    <div class="foodspots-list" id="foodspots-list"></div>
+                </div>
+            </section>
+
+</main>
 
         <!-- 플로팅 추가 버튼 -->
         <button class="fab" id="fab-btn">
