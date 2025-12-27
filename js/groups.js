@@ -484,7 +484,7 @@ function formatDate(date) {
 
 
 // ===== 지점 목록 로드 =====
-async async function loadBranches() {
+async function loadBranches() {
     // 1) 정적 파일(branches.json) 우선 로드(배포/개발환경 모두 안정적으로 동일 뎁스 보장)
     try {
         const res = await fetch('branches.json', { cache: 'no-store' });
