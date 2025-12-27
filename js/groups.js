@@ -47,7 +47,7 @@ const branchError = document.getElementById('branch-error');
 // ===== 전역 변수 =====
 let currentUser = null;
 let branches = [];
-// ===== 지점 데이터 인덱싱(2뎁스 드롭다운용) =====
+// ===== 지점 데이터 인덱싱(하위조직 드롭다운용) =====
 let branchById = new Map();          // id -> branch
 let childrenByParentId = new Map();  // parentId -> [child branches]
 let hqBranch = null;                // level0(본점)
@@ -99,13 +99,13 @@ function escapeAttr(value) {
     return String(value ?? '').replace(/"/g, '&quot;');
 }
 
-// sharedRestaurants용: branchId 기반으로 1뎁스(본점/영업본부 동급 1뎁스) 산출
+// sharedRestaurants용: branchId 기반으로 상위조직(본점/영업본부 동급 상위조직) 산출
 function getTop1BranchIdFromBranchId(branchId) {
     const b = branchById.get(branchId);
     if (!b) return null;
     if (b.level === 0) return b.id;          // 본점
     if (b.level === 1) return b.id;          // 영업본부
-    return b.parentId || null;               // 센터/지점 등(level2~)은 상위 영업본부가 1뎁스
+    return b.parentId || null;               // 센터/지점 등(level2~)은 상위 영업본부가 상위조직
 }
 
 function getTop1BranchNameFromBranchId(branchId) {
@@ -163,7 +163,7 @@ function setupMainTabs() {
     tabBtnGroups.addEventListener('click', () => switchMainTab('groups'));
     tabBtnFoodspots.addEventListener('click', () => switchMainTab('foodspots'));
 
-    // 필터 이벤트(1뎁스/2뎁스/검색)
+    // 필터 이벤트(상위조직/하위조직/검색)
     if (foodspotsTop1Select) {
         foodspotsTop1Select.addEventListener('change', () => {
             populateFoodspotsTop2Options();
@@ -222,7 +222,7 @@ async function ensureFoodspotsLoaded() {
 
         sharedRestaurantsAll = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-        // 1뎁스/2뎁스 옵션 구성
+        // 상위조직/하위조직 옵션 구성
         populateFoodspotsTop1Options();
         populateFoodspotsTop2Options();
 
@@ -243,7 +243,7 @@ function populateFoodspotsTop1Options() {
 
     let html = '<option value="ALL">전체</option>';
 
-    // 1뎁스: 본점 + 영업본부(동급)
+    // 상위조직: 본점 + 영업본부(동급)
     if (hqBranch) {
         html += `<option value="${escapeAttr(hqBranch.id)}">${escapeHtml(hqBranch.name || '본점')}</option>`;
     }
@@ -266,7 +266,7 @@ function populateFoodspotsTop2Options() {
     const top1 = foodspotsTop1Select?.value || 'ALL';
     const prev = foodspotsTop2Select.value || 'ALL';
 
-    // 기본: 1뎁스=전체 → 2뎁스 비활성(전체 고정)
+    // 기본: 상위조직=전체 → 하위조직 비활성(전체 고정)
     if (!top1 || top1 === 'ALL') {
         foodspotsTop2Select.innerHTML = '<option value="ALL">전체</option>';
         foodspotsTop2Select.value = 'ALL';
@@ -274,18 +274,13 @@ function populateFoodspotsTop2Options() {
         return;
     }
 
-    foodspotsTop2Select.disabled = false;
-
-    let options = [{ value: 'ALL', label: '전체' }];
-
-    // 1뎁스=본점 → 2뎁스는 "전체 + 영업본부 목록"
+    // 상위조직=본점(HQ) → 하위조직 없음: 본점으로 고정(비활성)
     if (hqBranch && top1 === hqBranch.id) {
-        (level1Branches || []).forEach(b => {
-            if (hqBranch && b.id === hqBranch.id) return;
-            options.push({ value: b.id, label: b.name || '' });
-        });
+        // 본점은 하위조직(하위조직) 없음: 본점에 직접 매핑된 맛집만 노출
+        list = list.filter(r => r.branchId === hqBranch.id);
+
     } else {
-        // 1뎁스=영업본부 → 2뎁스는 "전체 + (영업본부 자체) + 하위 조직(지점/센터/지원단...)"
+        // 상위조직=영업본부 → 하위조직는 "전체 + (영업본부 자체) + 하위 조직(지점/센터/지원단...)"
         const top1Branch = branchById.get(top1);
         if (top1Branch) {
             options.push({ value: top1Branch.id, label: top1Branch.name || '' });
@@ -328,16 +323,16 @@ function filterFoodspotsBase() {
 
     let list = [...sharedRestaurantsAll];
 
-    // ---- 1뎁스/2뎁스 필터(요구사항: 2단계 뎁스) ----
+    // ---- 상위조직/하위조직 필터(요구사항: 2단계 뎁스) ----
     if (top1 && top1 !== 'ALL') {
-        // 1뎁스=본점(HQ)
+        // 상위조직=본점(HQ)
         if (hqBranch && top1 === hqBranch.id) {
-            // 2뎁스가 특정 영업본부로 선택된 경우에만 필터(=그 영업본부 범위)
+            // 하위조직가 특정 영업본부로 선택된 경우에만 필터(=그 영업본부 범위)
             if (top2 && top2 !== 'ALL') {
                 list = list.filter(r => getTop1BranchIdFromBranchId(r.branchId) === top2);
             }
         } else {
-            // 1뎁스=영업본부(레벨1)
+            // 상위조직=영업본부(레벨1)
             if (!top2 || top2 === 'ALL') {
                 // 전체(해당 영업본부 + 하위 조직)
                 list = list.filter(r => getTop1BranchIdFromBranchId(r.branchId) === top1);
@@ -345,7 +340,7 @@ function filterFoodspotsBase() {
                 // 영업본부 자체(레벨1에 직접 매핑된 맛집만)
                 list = list.filter(r => r.branchId === top1);
             } else {
-                // 특정 2뎁스(지점/센터/지원단 등)
+                // 특정 하위조직(지점/센터/지원단 등)
                 list = list.filter(r => r.branchId === top2);
             }
         }
@@ -369,7 +364,7 @@ function filterFoodspotsBase() {
 function renderFoodspots() {
     if (!foodspotsLoaded) return;
 
-    // 1뎁스 변경 시 2뎁스 옵션을 동기화(탭 이동/새로고침에도 안전)
+    // 상위조직 변경 시 하위조직 옵션을 동기화(탭 이동/새로고침에도 안전)
     populateFoodspotsTop2Options();
 
     const top1 = foodspotsTop1Select?.value || 'ALL';
