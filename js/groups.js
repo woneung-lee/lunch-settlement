@@ -1044,3 +1044,198 @@ groupNameInput.addEventListener('keypress', (e) => {
     }
 });
 
+// ===== Foodspots UI State =====
+let foodspotsViewMode = (localStorage.getItem('foodspotsViewMode') || 'grid'); // 'grid' | 'list'
+
+// 안전한 날짜 표시
+function formatKoreanDate(ts) {
+  try {
+    if (!ts) return '';
+    const d = ts.toDate ? ts.toDate() : (ts instanceof Date ? ts : new Date(ts));
+    if (isNaN(d.getTime())) return '';
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}.${m}.${day}`;
+  } catch {
+    return '';
+  }
+}
+
+function getBranchName(branchId) {
+  const b = branchById?.get ? branchById.get(branchId) : null;
+  return b?.name || '';
+}
+
+function setFoodspotsState(text, show) {
+  const el = document.getElementById('foodspotsState');
+  if (!el) return;
+  el.style.display = show ? 'block' : 'none';
+  el.textContent = text || '';
+}
+
+function setFoodspotsCount(n) {
+  const el = document.getElementById('foodspotsCount');
+  if (!el) return;
+  el.textContent = `${(n || 0).toLocaleString()}건`;
+}
+
+function applyFoodspotsViewMode() {
+  const listEl = document.getElementById('foodspotsList');
+  if (!listEl) return;
+
+  listEl.classList.remove('foodspots-grid', 'foodspots-list');
+  listEl.classList.add(foodspotsViewMode === 'list' ? 'foodspots-list' : 'foodspots-grid');
+
+  const btnGrid = document.getElementById('foodspotsViewGrid');
+  const btnList = document.getElementById('foodspotsViewList');
+  if (btnGrid) btnGrid.classList.toggle('active', foodspotsViewMode !== 'list');
+  if (btnList) btnList.classList.toggle('active', foodspotsViewMode === 'list');
+
+  localStorage.setItem('foodspotsViewMode', foodspotsViewMode);
+}
+
+// 정렬
+function sortFoodspots(items, mode) {
+  const arr = [...(items || [])];
+  const safeName = (x) => (x?.restaurantName || x?.name || '').toString();
+  const safeBranch = (x) => getBranchName(x?.branchId || x?.branch || '');
+  const safeTime = (x) => {
+    const t = x?.sharedAt || x?.createdAt || x?.timestamp || null;
+    if (!t) return 0;
+    const d = t.toDate ? t.toDate() : new Date(t);
+    return isNaN(d.getTime()) ? 0 : d.getTime();
+  };
+
+  switch (mode) {
+    case 'old':
+      arr.sort((a, b) => safeTime(a) - safeTime(b));
+      break;
+    case 'name':
+      arr.sort((a, b) => safeName(a).localeCompare(safeName(b), 'ko'));
+      break;
+    case 'branch':
+      arr.sort((a, b) => safeBranch(a).localeCompare(safeBranch(b), 'ko') || safeName(a).localeCompare(safeName(b), 'ko'));
+      break;
+    case 'new':
+    default:
+      arr.sort((a, b) => safeTime(b) - safeTime(a));
+      break;
+  }
+  return arr;
+}
+
+// 검색
+function filterFoodspotsBySearch(items, q) {
+  const query = (q || '').trim().toLowerCase();
+  if (!query) return items || [];
+  return (items || []).filter(x => {
+    const name = (x?.restaurantName || x?.name || '').toString().toLowerCase();
+    const cat = (x?.category || '').toString().toLowerCase();
+    const note = (x?.note || x?.reason || x?.comment || '').toString().toLowerCase();
+    const branch = getBranchName(x?.branchId || x?.branch || '').toLowerCase();
+    return name.includes(query) || cat.includes(query) || note.includes(query) || branch.includes(query);
+  });
+}
+
+// 실제 렌더링(카드 UI)
+function renderFoodspotsUI(itemsRaw) {
+  const listEl = document.getElementById('foodspotsList');
+  if (!listEl) return;
+
+  // 컨트롤 읽기
+  const qEl = document.getElementById('foodspotsSearchInput');
+  const sortEl = document.getElementById('foodspotsSortSelect');
+  const q = qEl ? qEl.value : '';
+  const sortMode = sortEl ? sortEl.value : 'new';
+
+  // 검색 + 정렬
+  const items = sortFoodspots(filterFoodspotsBySearch(itemsRaw, q), sortMode);
+
+  applyFoodspotsViewMode();
+  setFoodspotsCount(items.length);
+
+  if (!items.length) {
+    listEl.innerHTML = '';
+    setFoodspotsState('표시할 맛집이 없습니다. 상위조직/하위조직 조건을 변경하거나, 검색어를 확인해 주십시오.', true);
+    return;
+  }
+
+  setFoodspotsState('', false);
+
+  listEl.innerHTML = items.map(x => {
+    const name = escapeHtml((x.restaurantName || x.name || '').toString());
+    const category = escapeHtml((x.category || '').toString());
+    const branchName = escapeHtml(getBranchName(x.branchId || x.branch || ''));
+    const note = escapeHtml((x.note || x.reason || x.comment || '').toString());
+    const who = escapeHtml((x.sharedByName || x.sharedById || x.sharedBy || '').toString());
+    const dt = formatKoreanDate(x.sharedAt || x.createdAt);
+
+    const badges = [
+      branchName ? `<span class="badge badge-branch">${branchName}</span>` : '',
+      category ? `<span class="badge badge-category">${category}</span>` : '',
+    ].filter(Boolean).join('');
+
+    const noteHtml = note ? `<div class="foodspot-note">${note}</div>` : '';
+
+    return `
+      <div class="foodspot-card">
+        <div class="foodspot-top">
+          <div class="foodspot-name">${name || '(이름 없음)'}</div>
+        </div>
+        <div class="foodspot-meta">
+          ${badges}
+        </div>
+        ${noteHtml}
+        <div class="foodspot-footer">
+          <div>${who ? `소문낸 사람: ${who}` : ''}</div>
+          <div>${dt ? `등록일: ${dt}` : ''}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// 컨트롤 이벤트 연결(한 번만)
+(function bindFoodspotsControlsOnce() {
+  const qEl = document.getElementById('foodspotsSearchInput');
+  const sortEl = document.getElementById('foodspotsSortSelect');
+  const btnGrid = document.getElementById('foodspotsViewGrid');
+  const btnList = document.getElementById('foodspotsViewList');
+
+  if (qEl && !qEl.dataset.bound) {
+    qEl.dataset.bound = '1';
+    qEl.addEventListener('input', () => {
+      // 기존 필터 결과 배열을 담는 변수가 있다면 그걸 넘기면 됩니다.
+      // 여기서는 window.currentFoodspotsFiltered 같은 전역을 쓰는 방식이 가장 간단합니다.
+      if (window.currentFoodspotsFiltered) renderFoodspotsUI(window.currentFoodspotsFiltered);
+    });
+  }
+
+  if (sortEl && !sortEl.dataset.bound) {
+    sortEl.dataset.bound = '1';
+    sortEl.addEventListener('change', () => {
+      if (window.currentFoodspotsFiltered) renderFoodspotsUI(window.currentFoodspotsFiltered);
+    });
+  }
+
+  if (btnGrid && !btnGrid.dataset.bound) {
+    btnGrid.dataset.bound = '1';
+    btnGrid.addEventListener('click', () => {
+      foodspotsViewMode = 'grid';
+      if (window.currentFoodspotsFiltered) renderFoodspotsUI(window.currentFoodspotsFiltered);
+    });
+  }
+
+  if (btnList && !btnList.dataset.bound) {
+    btnList.dataset.bound = '1';
+    btnList.addEventListener('click', () => {
+      foodspotsViewMode = 'list';
+      if (window.currentFoodspotsFiltered) renderFoodspotsUI(window.currentFoodspotsFiltered);
+    });
+  }
+
+  // 초기 모드 반영
+  applyFoodspotsViewMode();
+})();
+
