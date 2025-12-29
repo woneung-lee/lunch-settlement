@@ -447,7 +447,7 @@ sendInviteBtn.addEventListener('click', async () => {
 viewInvitesBtn.addEventListener('click', async () => {
     inviteStatusModal.classList.remove('hidden');
     await loadSentInvitations();
-}
+});
 
 // 방장 위임(방장 전용)
 if (transferOwnerBtn) {
@@ -456,7 +456,6 @@ if (transferOwnerBtn) {
         await transferOwnerTo(newOwnerUid);
     });
 }
-);
 
 // ===== 초대 현황 모달 닫기 =====
 function closeInviteStatusModal() {
