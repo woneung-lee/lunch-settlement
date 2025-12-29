@@ -849,10 +849,10 @@ function addOrderItem(orderData = null) {
                 <div class="order-helper">※ '그룹원'은 선택 가능하며, 목록에 없는 인원은 '게스트 직접입력'을 선택 후 이름을 입력해 주십시오.</div>
             </div>
             <div class="field-row">
-                <div class="form-group">
-                    <label>메뉴</label>
-                    <input type="text" class="order-menu" placeholder="메뉴명" value="${orderData?.menu || ''}">
-                </div>
+<div class="form-group">
+    <label>메뉴 (선택)</label>
+    <input type="text" class="shared-menu" placeholder="메뉴명 (선택사항)" value="${sharedData?.menu || ''}">
+</div>
                 <div class="form-group">
                     <label>금액</label>
                     <input type="text" inputmode="numeric" class="order-amount" placeholder="0" value="${orderData?.amount != null ? Number(orderData.amount).toLocaleString() : ''}">
@@ -912,9 +912,9 @@ sharedItem.innerHTML = `
         <div class="order-fields">
             <div class="field-row">
                 <div class="form-group">
-                    <label>메뉴</label>
-                    <input type="text" class="shared-menu" placeholder="메뉴명" value="${sharedData?.menu || ''}">
-                </div>
+    <label>메뉴 (선택)</label>
+    <input type="text" class="order-menu" placeholder="메뉴명 (선택사항)" value="${orderData?.menu || ''}">
+</div>
                 <div class="form-group">
                     <label>총 금액</label>
                     <input type="text" inputmode="numeric" class="shared-amount" placeholder="0" value="${sharedData?.amount != null ? Number(sharedData.amount).toLocaleString() : ''}">
@@ -1025,10 +1025,9 @@ saveMealBtn.addEventListener('click', async () => {
         const menu = item.querySelector('.order-menu').value.trim();
         const amount = parseAmount(item.querySelector('.order-amount').value);
         
-        if (memberName && menu && amount > 0) {
-            orders.push({ memberName, menu, amount });
-            // ※ 등록 멤버가 아닌 인원은 자동 등록하지 않음(이름 직접 입력만 허용)
-        }
+if (memberName && amount > 0) {
+    orders.push({ memberName, menu: menu || '', amount });
+}
     }
     
     // 공용 메뉴 수집
@@ -1040,9 +1039,9 @@ saveMealBtn.addEventListener('click', async () => {
         const memberCheckboxes = item.querySelectorAll('input[type="checkbox"]:checked');
         const selectedMembers = Array.from(memberCheckboxes).map(cb => cb.value);
         
-        if (menu && amount > 0 && selectedMembers.length > 0) {
-            shared.push({ menu, amount, members: selectedMembers });
-        }
+if (amount > 0 && selectedMembers.length > 0) {
+    shared.push({ menu: menu || '', amount, members: selectedMembers });
+}
     }
     
     // 최소 1개 주문 또는 공용 메뉴 필요
