@@ -67,48 +67,82 @@
         
             </section>
 
-            <!-- 맛집 탭 -->
-            <section class="tab-content hidden" id="tab-content-foodspots">
-                <div class="foodspots-controls">
-                    <div class="form-row">
-                        <label for="foodspots-top1">상위조직</label>
-                        <select id="foodspots-top1">
-                            <option value="ALL">전체</option>
-                        </select>
-                    </div>
+           <!-- 맛집 탭 -->
+<section class="tab-content hidden" id="tab-content-foodspots">
 
-                    <div class="form-row">
-                        <label for="foodspots-top2">하위조직</label>
-                        <select id="foodspots-top2">
-                            <option value="ALL">전체</option>
-                        </select>
-                    </div>
+    <!-- 상단 헤더 -->
+    <div class="foodspots-header">
+        <div class="foodspots-title-row">
+            <div class="foodspots-title">지점별 맛집</div>
+            <div class="foodspots-count" id="foodspots-count">0건</div>
+        </div>
 
-                    <div class="form-row">
-                        <label for="foodspots-search">검색</label>
-                        <input id="foodspots-search" type="text" placeholder="음식점명/카테고리/사유 검색">
-                    </div>
+        <!-- 필터/검색/정렬/보기전환 -->
+        <div class="foodspots-controls">
+            <div class="form-row">
+                <label for="foodspots-top1">상위조직</label>
+                <select id="foodspots-top1">
+                    <option value="ALL">전체</option>
+                </select>
+            </div>
+
+            <div class="form-row">
+                <label for="foodspots-top2">하위조직</label>
+                <select id="foodspots-top2">
+                    <option value="ALL">전체</option>
+                </select>
+            </div>
+
+            <div class="form-row">
+                <label for="foodspots-search">검색</label>
+                <input id="foodspots-search" type="text" placeholder="맛집 검색 (음식점명/카테고리/사유/지점)" autocomplete="off">
+            </div>
+
+            <div class="form-row">
+                <label for="foodspots-sort">정렬</label>
+                <select id="foodspots-sort">
+                    <option value="new">최신순</option>
+                    <option value="old">오래된순</option>
+                    <option value="name">가나다순</option>
+                    <option value="branch">지점순</option>
+                </select>
+            </div>
+
+            <div class="form-row foodspots-view-row">
+                <label>보기</label>
+                <div class="foodspots-view-toggle">
+                    <button type="button" class="view-btn active" id="foodspots-view-grid">카드</button>
+                    <button type="button" class="view-btn" id="foodspots-view-list">리스트</button>
                 </div>
+            </div>
+        </div>
+    </div>
 
-                <!-- 로딩 상태 -->
-                <div class="loading-state hidden" id="foodspots-loading">
-                    <div class="spinner"></div>
-                    <p>맛집 목록을 불러오는 중...</p>
-                </div>
+    <!-- 로딩 상태 -->
+    <div class="loading-state hidden" id="foodspots-loading">
+        <div class="spinner"></div>
+        <p>맛집 목록을 불러오는 중...</p>
+    </div>
 
-                <!-- 빈 상태 -->
-                <div class="empty-state hidden" id="foodspots-empty">
-                    <div class="empty-icon">🍜</div>
-                    <h2 id="foodspots-empty-title">공유된 맛집이 없어요</h2>
-                    <p id="foodspots-empty-desc">음식점 관리에서 ‘소문내기’를 체크하면 여기에 표시됩니다.</p>
-                </div>
+    <!-- 빈 상태(기존 유지) -->
+    <div class="empty-state hidden" id="foodspots-empty">
+        <div class="empty-icon">🍜</div>
+        <h2 id="foodspots-empty-title">공유된 맛집이 없어요</h2>
+        <p id="foodspots-empty-desc">음식점 관리에서 ‘소문내기’를 체크하면 여기에 표시됩니다.</p>
+    </div>
 
-                <!-- 맛집 목록 -->
-                <div class="foodspots-container hidden" id="foodspots-container">
-                    <div class="foodspots-summary" id="foodspots-summary"></div>
-                    <div class="foodspots-list" id="foodspots-list"></div>
-                </div>
-            </section>
+    <!-- 맛집 목록 -->
+    <div class="foodspots-container hidden" id="foodspots-container">
+        <!-- 요약(선택사항: 필터 상태 문구 등에 활용) -->
+        <div class="foodspots-summary" id="foodspots-summary"></div>
+
+        <!-- 상태(검색 결과 없음 등) -->
+        <div class="foodspots-state hidden" id="foodspots-state"></div>
+
+        <!-- 실제 리스트(기본: 카드 그리드) -->
+        <div class="foodspots-grid" id="foodspots-list"></div>
+    </div>
+</section>
 
 </main>
 
