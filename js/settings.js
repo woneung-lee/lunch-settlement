@@ -247,9 +247,6 @@ const memberManagement = document.getElementById('member-management');
         dangerZone.classList.add('hidden');
         if (memberManagement) memberManagement.classList.add('hidden');
     }
- else {
-        dangerZone.classList.add('hidden');
-    }
 }
 
 
