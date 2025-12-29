@@ -18,13 +18,11 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// Firestore 타임스탬프 헬퍼
-const timestamp = firebase.firestore.FieldValue.serverTimestamp;
-const Timestamp = firebase.firestore.Timestamp;
-
-console.log('Firebase initialized successfully');
-
-// 타임스탬프 헬퍼 함수
+// Firestore 타임스탬프 헬퍼 함수
 function timestamp() {
     return firebase.firestore.FieldValue.serverTimestamp();
 }
+
+const Timestamp = firebase.firestore.Timestamp;
+
+console.log('Firebase initialized successfully');
