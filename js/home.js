@@ -783,7 +783,7 @@ addOrderBtn.addEventListener('click', () => {
 
 
 function onOrderMemberSelectChange(orderId) {
-    const item = orderList.querySelector(`[data-order-id="${orderId}"]`);
+    const item = ordersList.querySelector(`[data-order-id="${orderId}"]`);
     if (!item) return;
 
     const sel = item.querySelector('.order-member-select');
@@ -801,7 +801,7 @@ function onOrderMemberSelectChange(orderId) {
 }
 
 function initOrderMemberUI(orderId, memberName) {
-    const item = orderList.querySelector(`[data-order-id="${orderId}"]`);
+    const item = ordersList.querySelector(`[data-order-id="${orderId}"]`);
     if (!item) return;
 
     const sel = item.querySelector('.order-member-select');
@@ -916,7 +916,7 @@ sharedItem.innerHTML = `
             <div class="field-row">
                 <div class="form-group">
     <label>메뉴 (선택)</label>
-    <input type="text" class="order-menu" placeholder="메뉴명 (선택사항)" value="${orderData?.menu || ''}">
+    <input type="text" class="shared-menu" ... value="${sharedData?.menu || ''}">
 </div>
                 <div class="form-group">
                     <label>총 금액</label>
