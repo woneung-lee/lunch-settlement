@@ -901,3 +901,268 @@
   font-size: 14px;
 }
 
+/* ===== Foodspots (Hip / Naver-ish) ===== */
+.foodspots-shell {
+  padding: 10px 0 0 0;
+}
+
+.foodspots-hero {
+  background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(249,250,251,0.9));
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  padding: 14px;
+  margin: 10px 0 12px 0;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+  backdrop-filter: blur(8px);
+}
+
+.foodspots-hero-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.foodspots-hero-title {
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: -0.3px;
+}
+
+.foodspots-hero-sub {
+  font-size: 13px;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+.foodspots-hero-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.foodspots-count-pill {
+  font-size: 12px;
+  color: #0f172a;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 800;
+}
+
+.foodspots-sort {
+  padding: 9px 10px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  font-size: 13px;
+}
+
+.foodspots-view-toggle {
+  display: inline-flex;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 4px;
+  gap: 4px;
+}
+
+.view-btn {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 12px;
+  color: #374151;
+  font-weight: 700;
+}
+
+.view-btn.active {
+  background: #fff;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.10);
+  color: #111827;
+}
+
+.foodspots-filters {
+  display: grid;
+  grid-template-columns: 1fr 1fr 2fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.filter-item label {
+  display: block;
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 6px;
+  font-weight: 700;
+}
+
+.filter-item select,
+.filter-item input {
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 14px;
+  background: #fff;
+  outline: none;
+}
+
+.filter-item input:focus,
+.filter-item select:focus {
+  border-color: #cbd5e1;
+  box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.25);
+}
+
+.filter-item-wide {
+  grid-column: span 1;
+}
+
+@media (max-width: 820px) {
+  .foodspots-hero-top {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .foodspots-hero-actions {
+    justify-content: flex-start;
+  }
+  .foodspots-filters {
+    grid-template-columns: 1fr;
+  }
+  .filter-item-wide {
+    grid-column: auto;
+  }
+}
+
+/* Container view modes */
+.foodspots-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 10px;
+}
+
+@media (max-width: 820px) {
+  .foodspots-grid { grid-template-columns: 1fr; }
+}
+
+.foodspots-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.foodspots-state {
+  margin-top: 10px;
+  padding: 12px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  background: #fff;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* Card */
+.foodspot-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  padding: 14px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+  transition: transform .12s ease, box-shadow .12s ease;
+  overflow: hidden;
+  position: relative;
+}
+
+.foodspot-card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 6px;
+  background: linear-gradient(90deg, rgba(59,130,246,0.35), rgba(16,185,129,0.35), rgba(236,72,153,0.35));
+}
+
+.foodspot-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.10);
+}
+
+.foodspot-card-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.foodspot-card-name {
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: -0.2px;
+  line-height: 1.2;
+}
+
+.foodspot-card-date {
+  font-size: 12px;
+  color: #6b7280;
+  white-space: nowrap;
+  margin-top: 2px;
+}
+
+.foodspot-card-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.badge {
+  font-size: 12px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  color: #374151;
+  font-weight: 700;
+}
+
+.badge-branch {
+  background: #eef2ff;
+  border-color: #e0e7ff;
+  color: #3730a3;
+}
+
+.badge-category {
+  background: #ecfeff;
+  border-color: #cffafe;
+  color: #155e75;
+}
+
+/* Reason 강조(핵심) */
+.foodspot-card-reason {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px dashed #e5e7eb;
+  background: #f9fafb;
+  color: #111827;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.foodspot-card-reason .reason-title {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 900;
+  color: #374151;
+  margin-bottom: 6px;
+}
+
+
