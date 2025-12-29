@@ -15,13 +15,11 @@
                 <h1>점심 정산</h1>
                 <p class="subtitle">총무를 위한 간편한 점심 관리</p>
             </div>
-
             <!-- 탭 전환 -->
             <div class="tab-container">
                 <button class="tab-btn active" data-tab="login">로그인</button>
                 <button class="tab-btn" data-tab="signup">회원가입</button>
             </div>
-
             <!-- 로그인 폼 -->
             <div id="login-form" class="auth-form active">
                 <div class="form-group">
@@ -32,10 +30,19 @@
                     <label for="login-password">비밀번호</label>
                     <input type="password" id="login-password" placeholder="비밀번호를 입력하세요">
                 </div>
+                
+                <!-- ✅ 자동 로그인 체크박스 추가 -->
+                <div class="form-group checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="auto-login" checked>
+                        <span>자동 로그인</span>
+                    </label>
+                </div>
+                <!-- ✅ 여기까지 추가 -->
+                
                 <button class="btn-primary" id="login-btn">로그인</button>
                 <div class="error-message" id="login-error"></div>
             </div>
-
             <!-- 회원가입 폼 -->
             <div id="signup-form" class="auth-form">
                 <div class="form-group">
@@ -60,7 +67,6 @@
             </div>
         </div>
     </div>
-
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
