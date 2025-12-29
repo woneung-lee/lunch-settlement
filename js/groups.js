@@ -1,665 +1,611 @@
-'use strict';
+(function () {
+  'use strict';
 
-/* =========================
-   DOM 요소
-========================= */
-const logoutBtn = document.getElementById('logout-btn');
-const fabBtn = document.getElementById('fab-btn');
+  /* =========================
+     DOM 요소
+  ========================= */
+  const logoutBtn = document.getElementById('logout-btn');
+  const fabBtn = document.getElementById('fab-btn');
 
-// 탭
-const tabBtnGroups = document.getElementById('tab-btn-groups');
-const tabBtnFoodspots = document.getElementById('tab-btn-foodspots');
-const tabContentGroups = document.getElementById('tab-content-groups');
-const tabContentFoodspots = document.getElementById('tab-content-foodspots');
+  // 탭
+  const tabBtnGroups = document.getElementById('tab-btn-groups');
+  const tabBtnFoodspots = document.getElementById('tab-btn-foodspots');
+  const tabContentGroups = document.getElementById('tab-content-groups');
+  const tabContentFoodspots = document.getElementById('tab-content-foodspots');
 
-// 맛집 DOM (원응님 groups.html 기준 ID)
-const foodspotsTop1Select = document.getElementById('foodspots-top1');
-const foodspotsTop2Select = document.getElementById('foodspots-top2');
-const foodspotsSearch = document.getElementById('foodspots-search');
+  // 맛집 DOM (groups.html 기준 ID)
+  const foodspotsTop1Select = document.getElementById('foodspots-top1');
+  const foodspotsTop2Select = document.getElementById('foodspots-top2');
+  const foodspotsSearch = document.getElementById('foodspots-search');
 
-const foodspotsLoading = document.getElementById('foodspots-loading');
-const foodspotsEmpty = document.getElementById('foodspots-empty');
-const foodspotsEmptyTitle = document.getElementById('foodspots-empty-title');
-const foodspotsEmptyDesc = document.getElementById('foodspots-empty-desc');
-const foodspotsContainer = document.getElementById('foodspots-container');
-const foodspotsList = document.getElementById('foodspots-list');
-const foodspotsSummary = document.getElementById('foodspots-summary');
+  const foodspotsLoading = document.getElementById('foodspots-loading');
+  const foodspotsEmpty = document.getElementById('foodspots-empty');
+  const foodspotsEmptyTitle = document.getElementById('foodspots-empty-title');
+  const foodspotsEmptyDesc = document.getElementById('foodspots-empty-desc');
+  const foodspotsContainer = document.getElementById('foodspots-container');
+  const foodspotsList = document.getElementById('foodspots-list');
+  const foodspotsSummary = document.getElementById('foodspots-summary');
 
-// 그룹 DOM
-const createFirstGroupBtn = document.getElementById('create-first-group-btn');
-const loadingState = document.getElementById('loading-state');
-const emptyState = document.getElementById('empty-state');
-const groupsContainer = document.getElementById('groups-container');
-const groupsGrid = document.getElementById('groups-grid');
+  // 그룹 DOM
+  const createFirstGroupBtn = document.getElementById('create-first-group-btn');
+  const loadingState = document.getElementById('loading-state');
+  const emptyState = document.getElementById('empty-state');
+  const groupsContainer = document.getElementById('groups-container');
+  const groupsGrid = document.getElementById('groups-grid');
 
-// 모달
-const createGroupModal = document.getElementById('create-group-modal');
-const modalOverlay = document.getElementById('modal-overlay');
-const modalClose = document.getElementById('modal-close');
-const groupNameInput = document.getElementById('group-name');
-const groupNameError = document.getElementById('group-name-error');
-const cancelBtn = document.getElementById('cancel-btn');
-const createGroupBtn = document.getElementById('create-group-btn');
+  // 모달
+  const createGroupModal = document.getElementById('create-group-modal');
+  const modalOverlay = document.getElementById('modal-overlay');
+  const modalClose = document.getElementById('modal-close');
+  const groupNameInput = document.getElementById('group-name');
+  const groupNameError = document.getElementById('group-name-error');
+  const cancelBtn = document.getElementById('cancel-btn');
+  const createGroupBtn = document.getElementById('create-group-btn');
 
-// 지점 선택
-const branchSearchInput = document.getElementById('branch-search');
-const branchSearchResults = document.getElementById('branch-search-results');
-const branchList = document.getElementById('branch-list');
-const selectedBranch = document.getElementById('selected-branch');
-const selectedBranchName = document.getElementById('selected-branch-name');
-const selectedBranchParent = document.getElementById('selected-branch-parent');
-const changeBranchBtn = document.getElementById('change-branch-btn');
-const branchError = document.getElementById('branch-error');
+  // 지점 선택
+  const branchSearchInput = document.getElementById('branch-search');
+  const branchSearchResults = document.getElementById('branch-search-results');
+  const branchList = document.getElementById('branch-list');
+  const selectedBranch = document.getElementById('selected-branch');
+  const selectedBranchName = document.getElementById('selected-branch-name');
+  const selectedBranchParent = document.getElementById('selected-branch-parent');
+  const changeBranchBtn = document.getElementById('change-branch-btn');
+  const branchError = document.getElementById('branch-error');
 
-/* =========================
-   전역 변수/헬퍼
-========================= */
-let currentUser = null;
-let branches = [];
+  /* =========================
+     전역 변수/헬퍼(로컬 스코프)
+  ========================= */
+  let currentUser = null;
+  let branches = [];
 
-let branchById = new Map();          // id -> branch
-let childrenByParentId = new Map();  // parentId -> [child branches]
-let hqBranch = null;                // 본점
-let level1Branches = [];            // 본점과 동급(영업본부들)
+  let branchById = new Map();
+  let childrenByParentId = new Map();
+  let hqBranch = null;
+  let level1Branches = [];
 
-let sharedRestaurantsAll = [];
-let foodspotsLoaded = false;
-let currentMainTab = 'groups';
-let selectedBranchData = null;
+  let sharedRestaurantsAll = [];
+  let foodspotsLoaded = false;
+  let currentMainTab = 'groups';
+  let selectedBranchData = null;
 
-function ensureFirebaseReady() {
-  if (typeof auth === 'undefined' || typeof db === 'undefined') {
-    console.error('firebase-config.js 로드 실패: auth/db가 없습니다.');
-    alert('초기화 오류: Firebase 설정을 확인해 주세요(firebase-config.js).');
-    return false;
-  }
-  return true;
-}
-
-function timestamp() {
-  // compat SDK 기준
-  try {
-    return firebase.firestore.FieldValue.serverTimestamp();
-  } catch {
-    // 최후의 fallback(서버시간은 아니지만 UI 무한로딩 방지)
-    return new Date();
-  }
-}
-
-function withTimeout(promise, ms, label = 'timeout') {
-  return Promise.race([
-    promise,
-    new Promise((_, reject) => setTimeout(() => reject(new Error(label)), ms))
-  ]);
-}
-
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = String(text ?? '');
-  return div.innerHTML;
-}
-
-function escapeAttr(value) {
-  return String(value ?? '').replace(/"/g, '&quot;');
-}
-
-function splitPath(pathStr) {
-  if (!pathStr) return [];
-  return String(pathStr).split('>').map(s => s.trim()).filter(Boolean);
-}
-
-/* =========================
-   지점 인덱싱(상/하위조직)
-========================= */
-function indexBranches() {
-  branchById = new Map();
-  childrenByParentId = new Map();
-  hqBranch = null;
-  level1Branches = [];
-
-  (branches || []).forEach(b => {
-    if (!b || !b.id) return;
-
-    if (typeof b.level !== 'number') {
-      const parts = splitPath(b.fullPath || b.name || '');
-      b.level = Math.max(0, parts.length - 1);
+  function ensureFirebaseReady() {
+    if (typeof auth === 'undefined' || typeof db === 'undefined') {
+      console.error('firebase-config.js 로드 실패: auth/db가 없습니다.');
+      alert('초기화 오류: Firebase 설정을 확인해 주세요(firebase-config.js).');
+      return false;
     }
-
-    branchById.set(b.id, b);
-
-    const pid = (b.parentId === undefined) ? null : b.parentId;
-    if (!childrenByParentId.has(pid)) childrenByParentId.set(pid, []);
-    childrenByParentId.get(pid).push(b);
-
-    if (b.level === 0 || b.type === '본점' || b.name === '본점') {
-      hqBranch = b;
-    }
-  });
-
-  if (!hqBranch) {
-    hqBranch = (branches || []).find(b => b && (b.parentId === null || b.parentId === undefined)) || null;
+    return true;
   }
 
-  // 1뎁스(상위조직): 본점 + 영업본부(본점과 동급)
-  level1Branches = (branches || []).filter(b => {
-    if (!b || !b.id) return false;
-    if (b.level === 1) return true;
-    if (hqBranch && b.parentId === hqBranch.id) return true;
-    return false;
-  });
-  level1Branches.sort((a, b) => (a.name || '').localeCompare((b.name || ''), 'ko'));
-}
-
-// branchId -> 상위조직(branchId) 산출
-function getTop1BranchIdFromBranchId(branchId) {
-  const b = branchById.get(branchId);
-  if (!b) return null;
-  if (b.level === 0) return b.id;     // 본점
-  if (b.level === 1) return b.id;     // 영업본부
-  return b.parentId || null;          // 하위조직은 parentId가 상위조직
-}
-
-function getTop1BranchNameFromBranchId(branchId) {
-  const top1Id = getTop1BranchIdFromBranchId(branchId);
-  const b = top1Id ? branchById.get(top1Id) : null;
-  return b?.name || '';
-}
-
-// 화면 라벨(영업본부 > 지점)
-function getBranchDisplayName(branchId) {
-  const b = branchById.get(branchId);
-  if (!b) return '';
-  if (b.level === 0 || b.level === 1) return b.name || '';
-  const p = b.parentId ? branchById.get(b.parentId) : null;
-  return p ? `${p.name || ''} > ${b.name || ''}` : (b.name || '');
-}
-
-/* =========================
-   인증 상태 확인
-========================= */
-if (ensureFirebaseReady()) {
-  auth.onAuthStateChanged(async (user) => {
-    if (!user) {
-      window.location.href = 'index.html';
-      return;
-    }
-
-    currentUser = user;
-
-    // 사용자 정보
+  // ✅ 전역 충돌 방지: timestamp -> serverTs 로 변경(로컬 함수)
+  function serverTs() {
     try {
-      const userDoc = await db.collection('users').doc(user.uid).get();
-      if (userDoc.exists) currentUser.userData = userDoc.data();
-    } catch (e) {
-      console.warn('사용자 정보 로드 실패(계속 진행):', e);
+      return firebase.firestore.FieldValue.serverTimestamp();
+    } catch {
+      return new Date();
+    }
+  }
+
+  function withTimeout(promise, ms, label = 'timeout') {
+    return Promise.race([
+      promise,
+      new Promise((_, reject) => setTimeout(() => reject(new Error(label)), ms))
+    ]);
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = String(text ?? '');
+    return div.innerHTML;
+  }
+
+  function escapeAttr(value) {
+    return String(value ?? '').replace(/"/g, '&quot;');
+  }
+
+  function splitPath(pathStr) {
+    if (!pathStr) return [];
+    return String(pathStr).split('>').map(s => s.trim()).filter(Boolean);
+  }
+
+  /* =========================
+     지점 인덱싱(상/하위조직)
+  ========================= */
+  function indexBranches() {
+    branchById = new Map();
+    childrenByParentId = new Map();
+    hqBranch = null;
+    level1Branches = [];
+
+    (branches || []).forEach(b => {
+      if (!b || !b.id) return;
+
+      if (typeof b.level !== 'number') {
+        const parts = splitPath(b.fullPath || b.name || '');
+        b.level = Math.max(0, parts.length - 1);
+      }
+
+      branchById.set(b.id, b);
+
+      const pid = (b.parentId === undefined) ? null : b.parentId;
+      if (!childrenByParentId.has(pid)) childrenByParentId.set(pid, []);
+      childrenByParentId.get(pid).push(b);
+
+      if (b.level === 0 || b.type === '본점' || b.name === '본점') {
+        hqBranch = b;
+      }
+    });
+
+    if (!hqBranch) {
+      hqBranch = (branches || []).find(b => b && (b.parentId === null || b.parentId === undefined)) || null;
     }
 
-    // 탭 이벤트(1회 바인딩)
-    setupMainTabs();
+    level1Branches = (branches || []).filter(b => {
+      if (!b || !b.id) return false;
+      if (b.level === 1) return true;
+      if (hqBranch && b.parentId === hqBranch.id) return true;
+      return false;
+    });
+    level1Branches.sort((a, b) => (a.name || '').localeCompare((b.name || ''), 'ko'));
+  }
 
-    // 지점 로드
-    await loadBranches();
+  function getTop1BranchIdFromBranchId(branchId) {
+    const b = branchById.get(branchId);
+    if (!b) return null;
+    if (b.level === 0) return b.id;
+    if (b.level === 1) return b.id;
+    return b.parentId || null;
+  }
 
-    // 그룹/초대 로드(무한 스피너 방지: 각 12초 제한)
-    try {
-      await withTimeout(loadGroups(), 12000, 'loadGroups timeout');
-    } catch (e) {
-      console.warn(e);
-      showEmptyState();
+  function getBranchDisplayName(branchId) {
+    const b = branchById.get(branchId);
+    if (!b) return '';
+    if (b.level === 0 || b.level === 1) return b.name || '';
+    const p = b.parentId ? branchById.get(b.parentId) : null;
+    return p ? `${p.name || ''} > ${b.name || ''}` : (b.name || '');
+  }
+
+  /* =========================
+     인증 상태 확인
+  ========================= */
+  if (ensureFirebaseReady()) {
+    auth.onAuthStateChanged(async (user) => {
+      if (!user) {
+        window.location.href = 'index.html';
+        return;
+      }
+
+      currentUser = user;
+
+      try {
+        const userDoc = await db.collection('users').doc(user.uid).get();
+        if (userDoc.exists) currentUser.userData = userDoc.data();
+      } catch (e) {
+        console.warn('사용자 정보 로드 실패(계속 진행):', e);
+      }
+
+      setupMainTabs();
+
+      await loadBranches();
+
+      try {
+        await withTimeout(loadGroups(), 12000, 'loadGroups timeout');
+      } catch (e) {
+        console.warn(e);
+        showEmptyState();
+      }
+
+      try {
+        await withTimeout(loadReceivedInvitations(), 12000, 'loadInvites timeout');
+      } catch (e) {
+        console.warn(e);
+      }
+    });
+  }
+
+  /* =========================
+     메인 탭(그룹/맛집)
+  ========================= */
+  function setupMainTabs() {
+    if (!tabBtnGroups || !tabBtnFoodspots) return;
+    if (tabBtnGroups.dataset.bound === '1') return;
+
+    tabBtnGroups.dataset.bound = '1';
+    tabBtnFoodspots.dataset.bound = '1';
+
+    tabBtnGroups.addEventListener('click', () => switchMainTab('groups'));
+    tabBtnFoodspots.addEventListener('click', () => switchMainTab('foodspots'));
+
+    if (foodspotsTop1Select && !foodspotsTop1Select.dataset.bound) {
+      foodspotsTop1Select.dataset.bound = '1';
+      foodspotsTop1Select.addEventListener('change', () => {
+        populateFoodspotsTop2Options();
+        renderFoodspots();
+      });
+    }
+    if (foodspotsTop2Select && !foodspotsTop2Select.dataset.bound) {
+      foodspotsTop2Select.dataset.bound = '1';
+      foodspotsTop2Select.addEventListener('change', renderFoodspots);
+    }
+    if (foodspotsSearch && !foodspotsSearch.dataset.bound) {
+      foodspotsSearch.dataset.bound = '1';
+      foodspotsSearch.addEventListener('input', renderFoodspots);
     }
 
-    try {
-      await withTimeout(loadReceivedInvitations(), 12000, 'loadInvites timeout');
-    } catch (e) {
-      console.warn(e);
-      // 초대는 부가 기능: 실패해도 화면은 유지
-    }
-  });
-}
+    switchMainTab('groups');
+  }
 
-/* =========================
-   메인 탭(그룹/맛집)
-========================= */
-function setupMainTabs() {
-  if (!tabBtnGroups || !tabBtnFoodspots) return;
-  if (tabBtnGroups.dataset.bound === '1') return; // 이미 바인딩됨
+  function switchMainTab(tab) {
+    currentMainTab = tab;
 
-  tabBtnGroups.dataset.bound = '1';
-  tabBtnFoodspots.dataset.bound = '1';
+    if (tabBtnGroups) tabBtnGroups.classList.toggle('active', tab === 'groups');
+    if (tabBtnFoodspots) tabBtnFoodspots.classList.toggle('active', tab === 'foodspots');
 
-  tabBtnGroups.addEventListener('click', () => switchMainTab('groups'));
-  tabBtnFoodspots.addEventListener('click', () => switchMainTab('foodspots'));
+    if (tabContentGroups) tabContentGroups.classList.toggle('hidden', tab !== 'groups');
+    if (tabContentFoodspots) tabContentFoodspots.classList.toggle('hidden', tab !== 'foodspots');
 
-  if (foodspotsTop1Select && !foodspotsTop1Select.dataset.bound) {
-    foodspotsTop1Select.dataset.bound = '1';
-    foodspotsTop1Select.addEventListener('change', () => {
+    if (fabBtn) fabBtn.style.display = (tab === 'groups') ? '' : 'none';
+
+    if (tab === 'foodspots') ensureFoodspotsLoaded();
+  }
+
+  /* =========================
+     맛집 로드/필터/렌더
+  ========================= */
+  async function ensureFoodspotsLoaded() {
+    if (foodspotsLoaded) {
       populateFoodspotsTop2Options();
       renderFoodspots();
+      return;
+    }
+
+    try {
+      showFoodspotsLoading();
+
+      const snap = await db.collection('sharedRestaurants')
+        .orderBy('sharedAt', 'desc')
+        .limit(500)
+        .get();
+
+      sharedRestaurantsAll = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+      populateFoodspotsTop1Options();
+      populateFoodspotsTop2Options();
+
+      foodspotsLoaded = true;
+      renderFoodspots();
+    } catch (e) {
+      console.error('맛집 목록 로드 오류:', e);
+      alert('맛집 목록을 불러오는 중 오류가 발생했습니다.');
+      showFoodspotsEmpty();
+    }
+  }
+
+  function populateFoodspotsTop1Options() {
+    if (!foodspotsTop1Select) return;
+
+    const prev = foodspotsTop1Select.value || 'ALL';
+    let html = '<option value="ALL">전체</option>';
+
+    if (hqBranch) {
+      html += `<option value="${escapeAttr(hqBranch.id)}">${escapeHtml(hqBranch.name || '본점')}</option>`;
+    }
+    (level1Branches || []).forEach(b => {
+      if (hqBranch && b.id === hqBranch.id) return;
+      html += `<option value="${escapeAttr(b.id)}">${escapeHtml(b.name || '')}</option>`;
     });
-  }
-  if (foodspotsTop2Select && !foodspotsTop2Select.dataset.bound) {
-    foodspotsTop2Select.dataset.bound = '1';
-    foodspotsTop2Select.addEventListener('change', renderFoodspots);
-  }
-  if (foodspotsSearch && !foodspotsSearch.dataset.bound) {
-    foodspotsSearch.dataset.bound = '1';
-    foodspotsSearch.addEventListener('input', renderFoodspots);
+
+    foodspotsTop1Select.innerHTML = html;
+
+    const hasPrev = [...foodspotsTop1Select.options].some(o => o.value === prev);
+    foodspotsTop1Select.value = hasPrev ? prev : 'ALL';
   }
 
-  switchMainTab('groups');
-}
+  function populateFoodspotsTop2Options() {
+    if (!foodspotsTop2Select) return;
 
-function switchMainTab(tab) {
-  currentMainTab = tab;
+    const top1 = foodspotsTop1Select?.value || 'ALL';
 
-  if (tabBtnGroups) tabBtnGroups.classList.toggle('active', tab === 'groups');
-  if (tabBtnFoodspots) tabBtnFoodspots.classList.toggle('active', tab === 'foodspots');
+    if (!top1 || top1 === 'ALL') {
+      foodspotsTop2Select.innerHTML = '<option value="ALL">전체</option>';
+      foodspotsTop2Select.value = 'ALL';
+      foodspotsTop2Select.disabled = true;
+      return;
+    }
 
-  if (tabContentGroups) tabContentGroups.classList.toggle('hidden', tab !== 'groups');
-  if (tabContentFoodspots) tabContentFoodspots.classList.toggle('hidden', tab !== 'foodspots');
-
-  if (fabBtn) fabBtn.style.display = (tab === 'groups') ? '' : 'none';
-
-  if (tab === 'foodspots') ensureFoodspotsLoaded();
-}
-
-/* =========================
-   맛집 로드/필터/렌더
-========================= */
-async function ensureFoodspotsLoaded() {
-  if (foodspotsLoaded) {
-    populateFoodspotsTop2Options();
-    renderFoodspots();
-    return;
-  }
-
-  try {
-    showFoodspotsLoading();
-
-    const snap = await db.collection('sharedRestaurants')
-      .orderBy('sharedAt', 'desc')
-      .limit(500)
-      .get();
-
-    sharedRestaurantsAll = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-
-    populateFoodspotsTop1Options();
-    populateFoodspotsTop2Options();
-
-    foodspotsLoaded = true;
-    renderFoodspots();
-  } catch (e) {
-    console.error('맛집 목록 로드 오류:', e);
-    alert('맛집 목록을 불러오는 중 오류가 발생했습니다.');
-    showFoodspotsEmpty();
-  }
-}
-
-function populateFoodspotsTop1Options() {
-  if (!foodspotsTop1Select) return;
-
-  const prev = foodspotsTop1Select.value || 'ALL';
-  let html = '<option value="ALL">전체</option>';
-
-  // 상위조직 = 본점 + 영업본부(동급)
-  if (hqBranch) {
-    html += `<option value="${escapeAttr(hqBranch.id)}">${escapeHtml(hqBranch.name || '본점')}</option>`;
-  }
-  (level1Branches || []).forEach(b => {
-    if (hqBranch && b.id === hqBranch.id) return;
-    html += `<option value="${escapeAttr(b.id)}">${escapeHtml(b.name || '')}</option>`;
-  });
-
-  foodspotsTop1Select.innerHTML = html;
-
-  const hasPrev = [...foodspotsTop1Select.options].some(o => o.value === prev);
-  foodspotsTop1Select.value = hasPrev ? prev : 'ALL';
-}
-
-function populateFoodspotsTop2Options() {
-  if (!foodspotsTop2Select) return;
-
-  const top1 = foodspotsTop1Select?.value || 'ALL';
-
-  // 상위=전체 → 하위 비활성
-  if (!top1 || top1 === 'ALL') {
-    foodspotsTop2Select.innerHTML = '<option value="ALL">전체</option>';
-    foodspotsTop2Select.value = 'ALL';
-    foodspotsTop2Select.disabled = true;
-    return;
-  }
-
-  // 상위=본점 → 하위조직 없음(본점 고정)
-  if (hqBranch && top1 === hqBranch.id) {
-    foodspotsTop2Select.innerHTML =
-      `<option value="${escapeAttr(hqBranch.id)}">${escapeHtml(hqBranch.name || '본점')}</option>`;
-    foodspotsTop2Select.value = hqBranch.id;
-    foodspotsTop2Select.disabled = true;
-    return;
-  }
-
-  // 상위=영업본부 → 하위 활성화 + (전체/본부/하위조직)
-  const prev = foodspotsTop2Select.value || 'ALL';
-  const options = [];
-
-  options.push({ value: 'ALL', label: '전체' });
-
-  const top1Branch = branchById.get(top1);
-  if (top1Branch) options.push({ value: top1Branch.id, label: top1Branch.name || '' });
-
-  const children = (childrenByParentId.get(top1) || []).filter(c => c && c.id);
-  children.sort((a, b) => (a.name || '').localeCompare((b.name || ''), 'ko'));
-  children.forEach(c => options.push({ value: c.id, label: c.name || '' }));
-
-  foodspotsTop2Select.innerHTML = options
-    .map(o => `<option value="${escapeAttr(o.value)}">${escapeHtml(o.label || '')}</option>`)
-    .join('');
-
-  const hasPrev = options.some(o => o.value === prev);
-  foodspotsTop2Select.value = hasPrev ? prev : 'ALL';
-  foodspotsTop2Select.disabled = false;
-}
-
-function filterFoodspotsBase() {
-  const q = (foodspotsSearch?.value || '').trim().toLowerCase();
-
-  const top1 = foodspotsTop1Select?.value || 'ALL';
-  const top2 = foodspotsTop2Select?.value || 'ALL';
-
-  let list = [...sharedRestaurantsAll];
-
-  // 2단계 필터
-  if (top1 && top1 !== 'ALL') {
-    // 상위=본점
     if (hqBranch && top1 === hqBranch.id) {
-      // 본점은 하위가 없으므로 기본적으로 전체 표시(=필터 없음)
-      // (정책상 “본점만”을 별도로 묶고 싶으면 sharedRestaurants에 branchId==본점만 넣는 구조여야 함)
-    } else {
-      // 상위=영업본부
-      if (!top2 || top2 === 'ALL') {
-        // 해당 영업본부 범위 전체
-        list = list.filter(r => getTop1BranchIdFromBranchId(r.branchId) === top1);
-      } else if (top2 === top1) {
-        // 영업본부 자체에 매핑된 맛집만
-        list = list.filter(r => r.branchId === top1);
+      foodspotsTop2Select.innerHTML =
+        `<option value="${escapeAttr(hqBranch.id)}">${escapeHtml(hqBranch.name || '본점')}</option>`;
+      foodspotsTop2Select.value = hqBranch.id;
+      foodspotsTop2Select.disabled = true;
+      return;
+    }
+
+    const prev = foodspotsTop2Select.value || 'ALL';
+    const options = [];
+
+    options.push({ value: 'ALL', label: '전체' });
+
+    const top1Branch = branchById.get(top1);
+    if (top1Branch) options.push({ value: top1Branch.id, label: top1Branch.name || '' });
+
+    const children = (childrenByParentId.get(top1) || []).filter(c => c && c.id);
+    children.sort((a, b) => (a.name || '').localeCompare((b.name || ''), 'ko'));
+    children.forEach(c => options.push({ value: c.id, label: c.name || '' }));
+
+    foodspotsTop2Select.innerHTML = options
+      .map(o => `<option value="${escapeAttr(o.value)}">${escapeHtml(o.label || '')}</option>`)
+      .join('');
+
+    const hasPrev = options.some(o => o.value === prev);
+    foodspotsTop2Select.value = hasPrev ? prev : 'ALL';
+    foodspotsTop2Select.disabled = false;
+  }
+
+  function filterFoodspotsBase() {
+    const q = (foodspotsSearch?.value || '').trim().toLowerCase();
+    const top1 = foodspotsTop1Select?.value || 'ALL';
+    const top2 = foodspotsTop2Select?.value || 'ALL';
+
+    let list = [...sharedRestaurantsAll];
+
+    if (top1 && top1 !== 'ALL') {
+      if (hqBranch && top1 === hqBranch.id) {
+        // 본점: 하위 없음(필터 없음)
       } else {
-        // 특정 하위조직
-        list = list.filter(r => r.branchId === top2);
+        if (!top2 || top2 === 'ALL') {
+          list = list.filter(r => getTop1BranchIdFromBranchId(r.branchId) === top1);
+        } else if (top2 === top1) {
+          list = list.filter(r => r.branchId === top1);
+        } else {
+          list = list.filter(r => r.branchId === top2);
+        }
       }
     }
+
+    if (q) {
+      list = list.filter(r => {
+        const name = (r.restaurantName || '').toLowerCase();
+        const cat = (r.category || '').toLowerCase();
+        const reason = (r.reason || '').toLowerCase();
+        const branch = (r.branchName || '').toLowerCase();
+        const full = (r.branchFullPath || '').toLowerCase();
+        return name.includes(q) || cat.includes(q) || reason.includes(q) || branch.includes(q) || full.includes(q);
+      });
+    }
+    return list;
   }
 
-  // 검색(요구: 그룹명은 표시/검색하지 않음)
-  if (q) {
-    list = list.filter(r => {
-      const name = (r.restaurantName || '').toLowerCase();
-      const cat = (r.category || '').toLowerCase();
-      const reason = (r.reason || '').toLowerCase();
-      const branch = (r.branchName || '').toLowerCase();
-      const full = (r.branchFullPath || '').toLowerCase();
-      return name.includes(q) || cat.includes(q) || reason.includes(q) || branch.includes(q) || full.includes(q);
+  function renderFoodspots() {
+    if (!foodspotsLoaded) return;
+
+    populateFoodspotsTop2Options();
+    const list = filterFoodspotsBase();
+
+    if (foodspotsEmptyTitle && foodspotsEmptyDesc) {
+      foodspotsEmptyTitle.textContent = '공유된 맛집이 없어요';
+      foodspotsEmptyDesc.textContent = '음식점 관리에서 ‘소문내기’를 체크하면 여기에 표시됩니다.';
+    }
+
+    if (!list.length) {
+      showFoodspotsEmpty();
+      return;
+    }
+
+    showFoodspotsContainer();
+
+    if (foodspotsSummary) {
+      foodspotsSummary.textContent = `총 ${list.length.toLocaleString()}건`;
+    }
+
+    renderFoodspotsUI(list);
+  }
+
+  function showFoodspotsLoading() {
+    if (foodspotsLoading) foodspotsLoading.classList.remove('hidden');
+    if (foodspotsEmpty) foodspotsEmpty.classList.add('hidden');
+    if (foodspotsContainer) foodspotsContainer.classList.add('hidden');
+  }
+  function showFoodspotsEmpty() {
+    if (foodspotsLoading) foodspotsLoading.classList.add('hidden');
+    if (foodspotsEmpty) foodspotsEmpty.classList.remove('hidden');
+    if (foodspotsContainer) foodspotsContainer.classList.add('hidden');
+  }
+  function showFoodspotsContainer() {
+    if (foodspotsLoading) foodspotsLoading.classList.add('hidden');
+    if (foodspotsEmpty) foodspotsEmpty.classList.add('hidden');
+    if (foodspotsContainer) foodspotsContainer.classList.remove('hidden');
+  }
+
+  function formatKoreanDate(ts) {
+    try {
+      if (!ts) return '';
+      const d = ts.toDate ? ts.toDate() : (ts instanceof Date ? ts : new Date(ts));
+      if (isNaN(d.getTime())) return '';
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}.${m}.${day}`;
+    } catch {
+      return '';
+    }
+  }
+
+  function categoryEmoji(category) {
+    const c = (category || '').trim();
+    if (c === '한식') return '🍲';
+    if (c === '중식') return '🥟';
+    if (c === '일식') return '🍣';
+    if (c === '양식') return '🍝';
+    if (c === '분식') return '🌶️';
+    return '🍽️';
+  }
+
+  // ✅ 그룹명 숨김, reason 노출(힙한 카드 템플릿은 CSS에서 스타일링)
+  function renderFoodspotsUI(itemsRaw) {
+    if (!foodspotsList) return;
+
+    const items = [...(itemsRaw || [])].sort((a, b) => {
+      const at = a?.sharedAt?.toMillis ? a.sharedAt.toMillis() : 0;
+      const bt = b?.sharedAt?.toMillis ? b.sharedAt.toMillis() : 0;
+      return bt - at;
+    });
+
+    foodspotsList.innerHTML = items.map(x => {
+      const name = escapeHtml((x.restaurantName || '').toString());
+      const category = escapeHtml((x.category || '').toString());
+      const branchLabel = escapeHtml(getBranchDisplayName(x.branchId) || x.branchFullPath || x.branchName || '');
+      const dt = formatKoreanDate(x.sharedAt || x.createdAt);
+
+      const reason = escapeHtml((x.reason || '').toString());
+      const hasReason = !!(x.reason && String(x.reason).trim());
+
+      return `
+        <div class="foodspot-card">
+          <div class="foodspot-card-top">
+            <div class="foodspot-card-name">${categoryEmoji(category)} ${name || '(이름 없음)'}</div>
+            ${dt ? `<div class="foodspot-card-date">${dt}</div>` : ''}
+          </div>
+
+          <div class="foodspot-card-badges">
+            ${branchLabel ? `<span class="badge badge-branch">${branchLabel}</span>` : ''}
+            ${category ? `<span class="badge badge-category">${category}</span>` : ''}
+          </div>
+
+          ${hasReason ? `
+            <div class="foodspot-card-reason">
+              <div class="reason-title">🗣️ 소문낸 이유</div>
+              <div class="reason-text">${reason}</div>
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }).join('');
+  }
+
+  /* =========================
+     지점 목록 로드
+  ========================= */
+  async function loadBranches() {
+    try {
+      const res = await fetch('branches.json', { cache: 'no-store' });
+      if (res.ok) {
+        branches = await res.json();
+        indexBranches();
+        return;
+      }
+    } catch {}
+
+    try {
+      const snapshot = await db.collection('branches').orderBy('fullPath').get();
+      branches = [];
+      snapshot.forEach(doc => branches.push({ id: doc.id, ...doc.data() }));
+      indexBranches();
+    } catch (e) {
+      console.error('지점 목록 로드 오류:', e);
+      alert('지점 목록을 불러오는 중 오류가 발생했습니다.');
+    }
+  }
+
+  /* =========================
+     지점 검색/선택
+  ========================= */
+  if (branchSearchInput) {
+    branchSearchInput.addEventListener('input', () => {
+      const query = branchSearchInput.value.trim();
+      if (!query) {
+        branchSearchResults?.classList.add('hidden');
+        return;
+      }
+      searchBranches(query);
+    });
+
+    branchSearchInput.addEventListener('focus', () => {
+      const query = branchSearchInput.value.trim();
+      if (query) searchBranches(query);
+      else showAllSelectableBranches();
     });
   }
 
-  return list;
-}
-
-function renderFoodspots() {
-  if (!foodspotsLoaded) return;
-
-  populateFoodspotsTop2Options();
-
-  const list = filterFoodspotsBase();
-
-  if (foodspotsEmptyTitle && foodspotsEmptyDesc) {
-    foodspotsEmptyTitle.textContent = '공유된 맛집이 없어요';
-    foodspotsEmptyDesc.textContent = '음식점 관리에서 ‘소문내기’를 체크하면 여기에 표시됩니다.';
+  function searchBranches(query) {
+    const lowerQuery = query.toLowerCase();
+    const results = (branches || []).filter(branch => {
+      if (!branch.selectable) return false;
+      const nameMatch = (branch.name || '').toLowerCase().includes(lowerQuery);
+      const parentMatch = (branch.parentName || '').toLowerCase().includes(lowerQuery);
+      const pathMatch = (branch.fullPath || '').toLowerCase().includes(lowerQuery);
+      return nameMatch || parentMatch || pathMatch;
+    });
+    renderBranchResults(results);
   }
 
-  if (!list.length) {
-    showFoodspotsEmpty();
-    return;
+  function showAllSelectableBranches() {
+    const selectable = (branches || []).filter(b => b.selectable);
+    renderBranchResults(selectable);
   }
 
-  showFoodspotsContainer();
+  function renderBranchResults(results) {
+    if (!branchList || !branchSearchResults) return;
+    branchList.innerHTML = '';
 
-  if (foodspotsSummary) {
-    foodspotsSummary.textContent = `총 ${list.length.toLocaleString()}건`;
-  }
-
-  // ✅ 카드 UI 렌더
-  window.currentFoodspotsFiltered = list;
-  renderFoodspotsUI(window.currentFoodspotsFiltered);
-}
-
-/* --- 맛집 상태 표시 --- */
-function showFoodspotsLoading() {
-  if (foodspotsLoading) foodspotsLoading.classList.remove('hidden');
-  if (foodspotsEmpty) foodspotsEmpty.classList.add('hidden');
-  if (foodspotsContainer) foodspotsContainer.classList.add('hidden');
-}
-function showFoodspotsEmpty() {
-  if (foodspotsLoading) foodspotsLoading.classList.add('hidden');
-  if (foodspotsEmpty) foodspotsEmpty.classList.remove('hidden');
-  if (foodspotsContainer) foodspotsContainer.classList.add('hidden');
-}
-function showFoodspotsContainer() {
-  if (foodspotsLoading) foodspotsLoading.classList.add('hidden');
-  if (foodspotsEmpty) foodspotsEmpty.classList.add('hidden');
-  if (foodspotsContainer) foodspotsContainer.classList.remove('hidden');
-}
-
-/* --- 맛집 카드 UI(원응님: 그룹명 숨김, reason 노출) --- */
-function formatKoreanDate(ts) {
-  try {
-    if (!ts) return '';
-    const d = ts.toDate ? ts.toDate() : (ts instanceof Date ? ts : new Date(ts));
-    if (isNaN(d.getTime())) return '';
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${y}.${m}.${day}`;
-  } catch {
-    return '';
-  }
-}
-
-// 카테고리(한식/중식/일식/양식/분식/기타)만
-function categoryEmoji(category) {
-  const c = (category || '').trim();
-  if (c === '한식') return '🍲';
-  if (c === '중식') return '🥟';
-  if (c === '일식') return '🍣';
-  if (c === '양식') return '🍝';
-  if (c === '분식') return '🌶️';
-  return '🍽️';
-}
-
-function renderFoodspotsUI(itemsRaw) {
-  if (!foodspotsList) return;
-
-  const items = [...(itemsRaw || [])];
-
-  // 최신순(기본)
-  items.sort((a, b) => {
-    const at = (a?.sharedAt?.toMillis ? a.sharedAt.toMillis() : 0);
-    const bt = (b?.sharedAt?.toMillis ? b.sharedAt.toMillis() : 0);
-    return bt - at;
-  });
-
-  foodspotsList.innerHTML = items.map(x => {
-    const name = escapeHtml((x.restaurantName || '').toString());
-    const category = escapeHtml((x.category || '').toString());
-    const branchLabel = escapeHtml(getBranchDisplayName(x.branchId) || x.branchFullPath || x.branchName || '');
-    const dt = formatKoreanDate(x.sharedAt || x.createdAt);
-
-    // ✅ reason만 노출(그룹명 숨김)
-    const reason = escapeHtml((x.reason || '').toString());
-    const hasReason = !!(x.reason && String(x.reason).trim());
-
-    return `
-      <div class="foodspot-card">
-        <div class="foodspot-card-top">
-          <div class="foodspot-card-name">${categoryEmoji(category)} ${name || '(이름 없음)'}</div>
-          ${dt ? `<div class="foodspot-card-date">${dt}</div>` : ''}
-        </div>
-        <div class="foodspot-card-badges">
-          ${branchLabel ? `<span class="badge badge-branch">${branchLabel}</span>` : ''}
-          ${category ? `<span class="badge badge-category">${category}</span>` : ''}
-        </div>
-        ${hasReason ? `
-          <div class="foodspot-card-reason">
-            <div class="reason-title">🗣️ 소문낸 이유</div>
-            <div>${reason}</div>
-          </div>
-        ` : ''}
-      </div>
-    `;
-  }).join('');
-}
-
-/* =========================
-   지점 목록 로드
-========================= */
-async function loadBranches() {
-  // 1) 정적 파일 우선
-  try {
-    const res = await fetch('branches.json', { cache: 'no-store' });
-    if (res.ok) {
-      branches = await res.json();
-      indexBranches();
-      console.log(`✅ 지점 목록 로드 완료(branches.json): ${branches.length}개`);
+    if (!results || results.length === 0) {
+      branchList.innerHTML = '<div class="no-results">검색 결과가 없습니다</div>';
+      branchSearchResults.classList.remove('hidden');
       return;
     }
-  } catch {
-    // ignore
-  }
 
-  // 2) Firestore fallback
-  try {
-    const snapshot = await db.collection('branches').orderBy('fullPath').get();
-    branches = [];
-    snapshot.forEach(doc => branches.push({ id: doc.id, ...doc.data() }));
-    indexBranches();
-    console.log(`✅ 지점 목록 로드 완료(Firestore): ${branches.length}개`);
-  } catch (e) {
-    console.error('지점 목록 로드 오류:', e);
-    alert('지점 목록을 불러오는 중 오류가 발생했습니다.');
-  }
-}
+    const headquarters = results.filter(b => b.level === 0);
+    const others = results.filter(b => b.level !== 0);
+    const sorted = [...headquarters, ...others];
 
-/* =========================
-   지점 검색/선택
-========================= */
-if (branchSearchInput) {
-  branchSearchInput.addEventListener('input', () => {
-    const query = branchSearchInput.value.trim();
-    if (!query) {
-      if (branchSearchResults) branchSearchResults.classList.add('hidden');
-      return;
-    }
-    searchBranches(query);
-  });
+    sorted.forEach(branch => {
+      const item = document.createElement('div');
+      item.className = 'branch-item';
+      if (branch.level === 0) item.classList.add('headquarters');
 
-  branchSearchInput.addEventListener('focus', () => {
-    const query = branchSearchInput.value.trim();
-    if (query) searchBranches(query);
-    else showAllSelectableBranches();
-  });
-}
+      item.innerHTML = `
+        <span class="branch-item-name">
+          ${escapeHtml(branch.name)}
+          <span class="branch-item-type">${escapeHtml(branch.type)}</span>
+        </span>
+        ${branch.level !== 0
+          ? `<span class="branch-item-path">${escapeHtml(branch.parentName)}</span>`
+          : '<span class="branch-item-path">최상위 조직</span>'}
+      `;
 
-function searchBranches(query) {
-  const lowerQuery = query.toLowerCase();
+      item.addEventListener('click', () => selectBranch(branch));
+      branchList.appendChild(item);
+    });
 
-  const results = (branches || []).filter(branch => {
-    if (!branch.selectable) return false;
-    const nameMatch = (branch.name || '').toLowerCase().includes(lowerQuery);
-    const parentMatch = (branch.parentName || '').toLowerCase().includes(lowerQuery);
-    const pathMatch = (branch.fullPath || '').toLowerCase().includes(lowerQuery);
-    return nameMatch || parentMatch || pathMatch;
-  });
-
-  renderBranchResults(results);
-}
-
-function showAllSelectableBranches() {
-  const selectableBranches = (branches || []).filter(b => b.selectable);
-  renderBranchResults(selectableBranches);
-}
-
-function renderBranchResults(results) {
-  if (!branchList || !branchSearchResults) return;
-
-  branchList.innerHTML = '';
-
-  if (!results || results.length === 0) {
-    branchList.innerHTML = '<div class="no-results">검색 결과가 없습니다</div>';
     branchSearchResults.classList.remove('hidden');
-    return;
   }
 
-  const headquarters = results.filter(b => b.level === 0);
-  const others = results.filter(b => b.level !== 0);
+  function selectBranch(branch) {
+    selectedBranchData = branch;
 
-  const sortedResults = [...headquarters, ...others];
+    if (selectedBranchName) selectedBranchName.textContent = branch.name || '';
+    if (selectedBranchParent) selectedBranchParent.textContent = branch.level === 0 ? '최상위 조직' : (branch.parentName || '');
 
-  sortedResults.forEach(branch => {
-    const item = createBranchItem(branch);
-    branchList.appendChild(item);
-  });
+    selectedBranch?.classList.remove('hidden');
+    if (branchSearchInput) branchSearchInput.value = branch.name || '';
+    branchSearchResults?.classList.add('hidden');
 
-  branchSearchResults.classList.remove('hidden');
-}
+    hideError(branchError);
+  }
 
-function createBranchItem(branch) {
-  const item = document.createElement('div');
-  item.className = 'branch-item';
-
-  if (branch.level === 0) item.classList.add('headquarters');
-
-  item.innerHTML = `
-    <span class="branch-item-name">
-      ${escapeHtml(branch.name)}
-      <span class="branch-item-type">${escapeHtml(branch.type)}</span>
-    </span>
-    ${branch.level !== 0
-      ? `<span class="branch-item-path">${escapeHtml(branch.parentName)}</span>`
-      : '<span class="branch-item-path">최상위 조직</span>'}
-  `;
-
-  item.addEventListener('click', () => selectBranch(branch));
-  return item;
-}
-
-function selectBranch(branch) {
-  selectedBranchData = branch;
-
-  if (selectedBranchName) selectedBranchName.textContent = branch.name || '';
-  if (selectedBranchParent) selectedBranchParent.textContent = (branch.level === 0 ? '최상위 조직' : (branch.parentName || ''));
-
-  if (selectedBranch) selectedBranch.classList.remove('hidden');
-  if (branchSearchInput) branchSearchInput.value = branch.name || '';
-  if (branchSearchResults) branchSearchResults.classList.add('hidden');
-
-  hideError(branchError);
-}
-
-if (changeBranchBtn) {
-  changeBranchBtn.addEventListener('click', () => {
+  changeBranchBtn?.addEventListener('click', () => {
     selectedBranchData = null;
-    if (selectedBranch) selectedBranch.classList.add('hidden');
+    selectedBranch?.classList.add('hidden');
     if (branchSearchInput) {
       branchSearchInput.value = '';
       branchSearchInput.focus();
     }
   });
-}
 
-/* =========================
-   로그아웃
-========================= */
-if (logoutBtn) {
-  logoutBtn.addEventListener('click', async () => {
+  /* =========================
+     로그아웃
+  ========================= */
+  logoutBtn?.addEventListener('click', async () => {
     try {
       await auth.signOut();
       window.location.href = 'index.html';
@@ -668,317 +614,306 @@ if (logoutBtn) {
       alert('로그아웃 중 오류가 발생했습니다.');
     }
   });
-}
 
-/* =========================
-   그룹 목록 로드(무한 스피너 방지 강화)
-========================= */
-async function loadGroups() {
-  showLoading();
+  /* =========================
+     그룹 목록 로드
+  ========================= */
+  async function loadGroups() {
+    showLoading();
 
-  try {
-    const groupsMap = new Map();
-
-    // (1) 멤버십 기반 조회(가능하면)
     try {
-      const membershipSnap = await db.collectionGroup('groupMembers')
-        .where('userId', '==', currentUser.uid)
+      const groupsMap = new Map();
+
+      // 멤버십 기반
+      try {
+        const membershipSnap = await db.collectionGroup('groupMembers')
+          .where('userId', '==', currentUser.uid)
+          .get();
+
+        for (const gmDoc of membershipSnap.docs) {
+          const groupRef = gmDoc.ref.parent.parent;
+          if (!groupRef) continue;
+          const gid = groupRef.id;
+          groupsMap.set(gid, { id: gid, _membership: gmDoc.data() || {} });
+        }
+      } catch (e) {
+        console.warn('collectionGroup(groupMembers) 실패:', e);
+      }
+
+      // 소유 그룹
+      const ownerSnap = await db.collection('groups')
+        .where('ownerId', '==', currentUser.uid)
         .get();
 
-      for (const gmDoc of membershipSnap.docs) {
-        const groupRef = gmDoc.ref.parent.parent; // groups/{groupId}
-        if (!groupRef) continue;
-        const gid = groupRef.id;
-        groupsMap.set(gid, { id: gid, _membership: gmDoc.data() || {} });
+      for (const doc of ownerSnap.docs) {
+        const gid = doc.id;
+        groupsMap.set(gid, { id: gid, ...doc.data() });
+
+        const gmRef = db.collection('groups').doc(gid).collection('groupMembers').doc(currentUser.uid);
+        const gmExists = await gmRef.get();
+        if (!gmExists.exists) {
+          await gmRef.set({
+            userId: currentUser.uid,
+            role: 'owner',
+            groupId: gid,
+            joinedAt: serverTs()
+          }, { merge: true });
+        }
       }
+
+      const groupsArr = [];
+      for (const [gid, val] of groupsMap.entries()) {
+        if (val && val.groupName) {
+          groupsArr.push(val);
+          continue;
+        }
+        const groupDoc = await db.collection('groups').doc(gid).get();
+        if (groupDoc.exists) groupsArr.push({ id: gid, ...groupDoc.data() });
+      }
+
+      groupsArr.sort((a, b) => {
+        const at = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+        const bt = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+        return bt - at;
+      });
+
+      if (!groupsArr.length) {
+        showEmptyState();
+        return;
+      }
+
+      if (groupsGrid) groupsGrid.innerHTML = '';
+      groupsArr.forEach(group => {
+        if (groupsGrid) groupsGrid.appendChild(createGroupCard(group));
+      });
+
+      showGroupsList();
     } catch (e) {
-      console.warn('collectionGroup(groupMembers) 실패(소유 그룹만이라도 표시):', e);
-    }
-
-    // (2) ownerId == 나 (구버전 보정 포함)
-    const ownerSnap = await db.collection('groups')
-      .where('ownerId', '==', currentUser.uid)
-      .get();
-
-    for (const doc of ownerSnap.docs) {
-      const gid = doc.id;
-      groupsMap.set(gid, { id: gid, ...doc.data() });
-
-      // owner 멤버십 문서 보정
-      const gmRef = db.collection('groups').doc(gid).collection('groupMembers').doc(currentUser.uid);
-      const gmExists = await gmRef.get();
-      if (!gmExists.exists) {
-        await gmRef.set({
-          userId: currentUser.uid,
-          role: 'owner',
-          groupId: gid,
-          joinedAt: timestamp()
-        }, { merge: true });
-      }
-    }
-
-    // (3) 그룹 문서 로드
-    const groupsArr = [];
-    for (const [gid, val] of groupsMap.entries()) {
-      if (val && val.groupName) {
-        groupsArr.push(val);
-        continue;
-      }
-      const groupDoc = await db.collection('groups').doc(gid).get();
-      if (groupDoc.exists) groupsArr.push({ id: gid, ...groupDoc.data() });
-    }
-
-    groupsArr.sort((a, b) => {
-      const at = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
-      const bt = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
-      return bt - at;
-    });
-
-    if (!groupsArr.length) {
+      console.error('그룹 목록 로드 오류:', e);
+      alert('그룹 목록을 불러오는 중 오류가 발생했습니다.');
       showEmptyState();
-      return;
     }
-
-    if (groupsGrid) groupsGrid.innerHTML = '';
-    groupsArr.forEach(group => {
-      const card = createGroupCard(group);
-      if (groupsGrid) groupsGrid.appendChild(card);
-    });
-
-    showGroupsList();
-  } catch (e) {
-    console.error('그룹 목록 로드 오류:', e);
-    alert('그룹 목록을 불러오는 중 오류가 발생했습니다.');
-    showEmptyState();
   }
-}
 
-/* =========================
-   받은 초대 로드/수락/거절
-========================= */
-async function loadReceivedInvitations() {
-  const section = document.getElementById('received-invites-section');
-  const listEl = document.getElementById('received-invites-list');
-  const emptyEl = document.getElementById('received-invites-empty');
-  if (!section || !listEl || !emptyEl) return;
+  /* =========================
+     받은 초대
+  ========================= */
+  async function loadReceivedInvitations() {
+    const section = document.getElementById('received-invites-section');
+    const listEl = document.getElementById('received-invites-list');
+    const emptyEl = document.getElementById('received-invites-empty');
+    if (!section || !listEl || !emptyEl) return;
 
-  try {
-    const snap = await db.collection('groupInvitations')
-      .where('invitedUserId', '==', currentUser.uid)
-      .get();
+    try {
+      const snap = await db.collection('groupInvitations')
+        .where('invitedUserId', '==', currentUser.uid)
+        .get();
 
-    const invites = [];
-    snap.forEach(doc => {
-      const inv = { id: doc.id, ...doc.data() };
-      if (inv.status === 'pending') invites.push(inv);
-    });
+      const invites = [];
+      snap.forEach(doc => {
+        const inv = { id: doc.id, ...doc.data() };
+        if (inv.status === 'pending') invites.push(inv);
+      });
 
-    if (!invites.length) {
+      if (!invites.length) {
+        section.classList.add('hidden');
+        return;
+      }
+
+      section.classList.remove('hidden');
+      listEl.innerHTML = '';
+
+      invites.sort((a, b) => {
+        const at = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+        const bt = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+        return bt - at;
+      });
+
+      invites.forEach(inv => {
+        const card = document.createElement('div');
+        card.className = 'invite-card';
+        card.innerHTML = `
+          <div class="invite-info">
+            <div class="invite-group-name">${escapeHtml(inv.groupName || '그룹')}</div>
+            <div class="invite-meta">초대자: ${escapeHtml(inv.inviterUserId || '-')}</div>
+          </div>
+          <div class="invite-actions">
+            <button class="btn-secondary btn-invite-decline" data-invite-id="${inv.id}">거절</button>
+            <button class="btn-primary btn-invite-accept" data-invite-id="${inv.id}" data-group-id="${escapeAttr(inv.groupId || '')}">수락</button>
+          </div>
+        `;
+        listEl.appendChild(card);
+      });
+
+      emptyEl.classList.add('hidden');
+
+      listEl.querySelectorAll('.btn-invite-accept').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const inviteId = btn.dataset.inviteId;
+          const gid = btn.dataset.groupId;
+          if (!inviteId || !gid) return;
+          await acceptInvitation(inviteId, gid);
+        });
+      });
+
+      listEl.querySelectorAll('.btn-invite-decline').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const inviteId = btn.dataset.inviteId;
+          if (!inviteId) return;
+          await declineInvitation(inviteId);
+        });
+      });
+    } catch (e) {
+      console.error('받은 초대 로드 오류:', e);
       section.classList.add('hidden');
-      return;
     }
+  }
 
-    section.classList.remove('hidden');
-    listEl.innerHTML = '';
+  async function acceptInvitation(inviteId, gid) {
+    try {
+      await db.collection('groups').doc(gid).collection('groupMembers').doc(currentUser.uid).set({
+        userId: currentUser.uid,
+        role: 'member',
+        groupId: gid,
+        joinedAt: serverTs()
+      }, { merge: true });
 
-    invites.sort((a, b) => {
-      const at = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
-      const bt = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
-      return bt - at;
-    });
-
-    invites.forEach(inv => {
-      const card = document.createElement('div');
-      card.className = 'invite-card';
-      card.innerHTML = `
-        <div class="invite-info">
-          <div class="invite-group-name">${escapeHtml(inv.groupName || '그룹')}</div>
-          <div class="invite-meta">초대자: ${escapeHtml(inv.inviterUserId || '-')}</div>
-        </div>
-        <div class="invite-actions">
-          <button class="btn-secondary btn-invite-decline" data-invite-id="${inv.id}">거절</button>
-          <button class="btn-primary btn-invite-accept" data-invite-id="${inv.id}" data-group-id="${escapeAttr(inv.groupId || '')}">수락</button>
-        </div>
-      `;
-      listEl.appendChild(card);
-    });
-
-    emptyEl.classList.add('hidden');
-
-    listEl.querySelectorAll('.btn-invite-accept').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const inviteId = btn.dataset.inviteId;
-        const gid = btn.dataset.groupId;
-        if (!inviteId || !gid) return;
-        await acceptInvitation(inviteId, gid);
+      await db.collection('groupInvitations').doc(inviteId).update({
+        status: 'accepted',
+        respondedAt: serverTs()
       });
-    });
 
-    listEl.querySelectorAll('.btn-invite-decline').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const inviteId = btn.dataset.inviteId;
-        if (!inviteId) return;
-        await declineInvitation(inviteId);
+      await loadReceivedInvitations();
+      await loadGroups();
+    } catch (e) {
+      console.error('초대 수락 오류:', e);
+      alert('초대 수락 중 오류가 발생했습니다.');
+    }
+  }
+
+  async function declineInvitation(inviteId) {
+    try {
+      await db.collection('groupInvitations').doc(inviteId).update({
+        status: 'declined',
+        respondedAt: serverTs()
       });
-    });
-  } catch (e) {
-    console.error('받은 초대 로드 오류:', e);
-    section.classList.add('hidden');
+      await loadReceivedInvitations();
+    } catch (e) {
+      console.error('초대 거절 오류:', e);
+      alert('초대 거절 중 오류가 발생했습니다.');
+    }
   }
-}
 
-async function acceptInvitation(inviteId, gid) {
-  try {
-    await db.collection('groups').doc(gid).collection('groupMembers').doc(currentUser.uid).set({
-      userId: currentUser.uid,
-      role: 'member',
-      groupId: gid,
-      joinedAt: timestamp()
-    }, { merge: true });
+  /* =========================
+     그룹 카드/이동
+  ========================= */
+  function createGroupCard(group) {
+    const card = document.createElement('div');
+    card.className = 'group-card';
+    card.onclick = () => openGroup(group.id);
 
-    await db.collection('groupInvitations').doc(inviteId).update({
-      status: 'accepted',
-      respondedAt: timestamp()
-    });
+    const createdDate = group.createdAt
+      ? new Date(group.createdAt.toDate()).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })
+      : '날짜 정보 없음';
 
-    await loadReceivedInvitations();
-    await loadGroups();
-  } catch (e) {
-    console.error('초대 수락 오류:', e);
-    alert('초대 수락 중 오류가 발생했습니다.');
-  }
-}
-
-async function declineInvitation(inviteId) {
-  try {
-    await db.collection('groupInvitations').doc(inviteId).update({
-      status: 'declined',
-      respondedAt: timestamp()
-    });
-    await loadReceivedInvitations();
-  } catch (e) {
-    console.error('초대 거절 오류:', e);
-    alert('초대 거절 중 오류가 발생했습니다.');
-  }
-}
-
-/* =========================
-   그룹 카드/이동
-========================= */
-function createGroupCard(group) {
-  const card = document.createElement('div');
-  card.className = 'group-card';
-  card.onclick = () => openGroup(group.id);
-
-  const createdDate = group.createdAt
-    ? new Date(group.createdAt.toDate()).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })
-    : '날짜 정보 없음';
-
-  card.innerHTML = `
-    <div class="group-card-header">
-      <div class="group-icon">🍱</div>
-    </div>
-    <div class="group-name">${escapeHtml(group.groupName || '')}</div>
-    ${group.branchName ? `
-      <div class="group-branch">
-        <span class="group-branch-icon">📍</span>
-        <span>${escapeHtml(group.branchName)}</span>
+    card.innerHTML = `
+      <div class="group-card-header">
+        <div class="group-icon">🍱</div>
       </div>
-    ` : ''}
-    <div class="group-info">
-      <div class="group-info-item">
-        <span class="group-info-icon">📅</span>
-        <span>${escapeHtml(createdDate)}</span>
+      <div class="group-name">${escapeHtml(group.groupName || '')}</div>
+      ${group.branchName ? `
+        <div class="group-branch">
+          <span class="group-branch-icon">📍</span>
+          <span>${escapeHtml(group.branchName)}</span>
+        </div>
+      ` : ''}
+      <div class="group-info">
+        <div class="group-info-item">
+          <span class="group-info-icon">📅</span>
+          <span>${escapeHtml(createdDate)}</span>
+        </div>
       </div>
-    </div>
-  `;
-  return card;
-}
-
-function openGroup(groupId) {
-  window.location.href = `home.html?groupId=${groupId}`;
-}
-
-/* =========================
-   상태 표시
-========================= */
-function showLoading() {
-  if (loadingState) loadingState.classList.remove('hidden');
-  if (emptyState) emptyState.classList.add('hidden');
-  if (groupsContainer) groupsContainer.classList.add('hidden');
-}
-
-function showEmptyState() {
-  if (loadingState) loadingState.classList.add('hidden');
-  if (emptyState) emptyState.classList.remove('hidden');
-  if (groupsContainer) groupsContainer.classList.add('hidden');
-}
-
-function showGroupsList() {
-  if (loadingState) loadingState.classList.add('hidden');
-  if (emptyState) emptyState.classList.add('hidden');
-  if (groupsContainer) groupsContainer.classList.remove('hidden');
-}
-
-/* =========================
-   모달 열기/닫기 + 에러
-========================= */
-function openModal() {
-  selectedBranchData = null;
-  if (selectedBranch) selectedBranch.classList.add('hidden');
-  if (branchSearchInput) branchSearchInput.value = '';
-  if (branchSearchResults) branchSearchResults.classList.add('hidden');
-
-  if (createGroupModal) createGroupModal.classList.remove('hidden');
-  if (groupNameInput) {
-    groupNameInput.value = '';
-    groupNameInput.focus();
+    `;
+    return card;
   }
-  hideError(groupNameError);
-  hideError(branchError);
-}
 
-function closeModal() {
-  if (createGroupModal) createGroupModal.classList.add('hidden');
-  if (groupNameInput) groupNameInput.value = '';
-  if (branchSearchInput) branchSearchInput.value = '';
-  selectedBranchData = null;
-  if (selectedBranch) selectedBranch.classList.add('hidden');
-  if (branchSearchResults) branchSearchResults.classList.add('hidden');
-  hideError(groupNameError);
-  hideError(branchError);
-}
-
-function showError(element, message) {
-  if (!element) return;
-  element.textContent = message;
-  element.classList.add('show');
-}
-
-function hideError(element) {
-  if (!element) return;
-  element.textContent = '';
-  element.classList.remove('show');
-}
-
-// 모달 이벤트
-if (fabBtn) fabBtn.addEventListener('click', openModal);
-if (createFirstGroupBtn) createFirstGroupBtn.addEventListener('click', openModal);
-if (modalClose) modalClose.addEventListener('click', closeModal);
-if (modalOverlay) modalOverlay.addEventListener('click', closeModal);
-if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
-
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && createGroupModal && !createGroupModal.classList.contains('hidden')) {
-    closeModal();
+  function openGroup(groupId) {
+    window.location.href = `home.html?groupId=${groupId}`;
   }
-});
 
-/* =========================
-   그룹 생성
-========================= */
-if (createGroupBtn) {
-  createGroupBtn.addEventListener('click', async () => {
+  /* =========================
+     상태 표시
+  ========================= */
+  function showLoading() {
+    loadingState?.classList.remove('hidden');
+    emptyState?.classList.add('hidden');
+    groupsContainer?.classList.add('hidden');
+  }
+
+  function showEmptyState() {
+    loadingState?.classList.add('hidden');
+    emptyState?.classList.remove('hidden');
+    groupsContainer?.classList.add('hidden');
+  }
+
+  function showGroupsList() {
+    loadingState?.classList.add('hidden');
+    emptyState?.classList.add('hidden');
+    groupsContainer?.classList.remove('hidden');
+  }
+
+  /* =========================
+     모달/에러/그룹 생성
+  ========================= */
+  function openModal() {
+    selectedBranchData = null;
+    selectedBranch?.classList.add('hidden');
+    if (branchSearchInput) branchSearchInput.value = '';
+    branchSearchResults?.classList.add('hidden');
+
+    createGroupModal?.classList.remove('hidden');
+    if (groupNameInput) {
+      groupNameInput.value = '';
+      groupNameInput.focus();
+    }
+    hideError(groupNameError);
+    hideError(branchError);
+  }
+
+  function closeModal() {
+    createGroupModal?.classList.add('hidden');
+    if (groupNameInput) groupNameInput.value = '';
+    if (branchSearchInput) branchSearchInput.value = '';
+    selectedBranchData = null;
+    selectedBranch?.classList.add('hidden');
+    branchSearchResults?.classList.add('hidden');
+    hideError(groupNameError);
+    hideError(branchError);
+  }
+
+  function showError(el, msg) {
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.add('show');
+  }
+
+  function hideError(el) {
+    if (!el) return;
+    el.textContent = '';
+    el.classList.remove('show');
+  }
+
+  fabBtn?.addEventListener('click', openModal);
+  createFirstGroupBtn?.addEventListener('click', openModal);
+  modalClose?.addEventListener('click', closeModal);
+  modalOverlay?.addEventListener('click', closeModal);
+  cancelBtn?.addEventListener('click', closeModal);
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && createGroupModal && !createGroupModal.classList.contains('hidden')) closeModal();
+  });
+
+  createGroupBtn?.addEventListener('click', async () => {
     const groupName = (groupNameInput?.value || '').trim();
 
     if (!groupName) {
@@ -991,7 +926,7 @@ if (createGroupBtn) {
     }
     if (!selectedBranchData) {
       showError(branchError, '소속 조직을 선택해주세요.');
-      if (branchSearchInput) branchSearchInput.focus();
+      branchSearchInput?.focus();
       return;
     }
 
@@ -1007,8 +942,8 @@ if (createGroupBtn) {
         branchType: selectedBranchData.type,
         branchLevel: selectedBranchData.level,
         branchFullPath: selectedBranchData.fullPath,
-        createdAt: timestamp(),
-        updatedAt: timestamp()
+        createdAt: serverTs(),
+        updatedAt: serverTs()
       });
 
       await db.collection('groups').doc(groupRef.id)
@@ -1017,19 +952,16 @@ if (createGroupBtn) {
           userId: currentUser.uid,
           role: 'owner',
           groupId: groupRef.id,
-          joinedAt: timestamp()
+          joinedAt: serverTs()
         }, { merge: true });
 
-      // 총무(방장)를 그룹원(점심 입력용 리스트)으로 자동 추가
       const userId = currentUser.userData?.userId || (currentUser.email ? currentUser.email.split('@')[0] : 'owner');
       await db.collection('groups').doc(groupRef.id).collection('members').add({
         name: userId,
-        createdAt: timestamp()
+        createdAt: serverTs()
       });
 
       closeModal();
-
-      // 새로고침
       await loadGroups();
       await loadReceivedInvitations();
     } catch (e) {
@@ -1040,14 +972,13 @@ if (createGroupBtn) {
       createGroupBtn.textContent = '만들기';
     }
   });
-}
 
-// Enter로 생성
-if (groupNameInput) {
-  groupNameInput.addEventListener('keypress', (e) => {
+  groupNameInput?.addEventListener('keypress', (e) => {
     if (e.key === 'Enter' && selectedBranchData) createGroupBtn?.click();
   });
-}
+
+})();
+
 
 
 
