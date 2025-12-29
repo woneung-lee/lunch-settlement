@@ -343,38 +343,39 @@
   }
 
   function filterFoodspotsBase() {
-    const q = (foodspotsSearch?.value || '').trim().toLowerCase();
-    const top1 = foodspotsTop1Select?.value || 'ALL';
-    const top2 = foodspotsTop2Select?.value || 'ALL';
+  const q = (foodspotsSearch?.value || '').trim().toLowerCase();
+  const top1 = foodspotsTop1Select?.value || 'ALL';
+  const top2 = foodspotsTop2Select?.value || 'ALL';
 
-    let list = [...sharedRestaurantsAll];
+  let list = [...sharedRestaurantsAll];
 
-    if (top1 && top1 !== 'ALL') {
-      if (hqBranch && top1 === hqBranch.id) {
-        // 본점: 하위 없음(필터 없음)
+  if (top1 && top1 !== 'ALL') {
+    if (hqBranch && top1 === hqBranch.id) {
+      // ✅ 수정: 본점 선택 시 본점 ID를 가진 맛집만 필터링
+      list = list.filter(r => r.branchId === hqBranch.id);
+    } else {
+      if (!top2 || top2 === 'ALL') {
+        list = list.filter(r => getTop1BranchIdFromBranchId(r.branchId) === top1);
+      } else if (top2 === top1) {
+        list = list.filter(r => r.branchId === top1);
       } else {
-        if (!top2 || top2 === 'ALL') {
-          list = list.filter(r => getTop1BranchIdFromBranchId(r.branchId) === top1);
-        } else if (top2 === top1) {
-          list = list.filter(r => r.branchId === top1);
-        } else {
-          list = list.filter(r => r.branchId === top2);
-        }
+        list = list.filter(r => r.branchId === top2);
       }
     }
-
-    if (q) {
-      list = list.filter(r => {
-        const name = (r.restaurantName || '').toLowerCase();
-        const cat = (r.category || '').toLowerCase();
-        const reason = (r.reason || '').toLowerCase();
-        const branch = (r.branchName || '').toLowerCase();
-        const full = (r.branchFullPath || '').toLowerCase();
-        return name.includes(q) || cat.includes(q) || reason.includes(q) || branch.includes(q) || full.includes(q);
-      });
-    }
-    return list;
   }
+
+  if (q) {
+    list = list.filter(r => {
+      const name = (r.restaurantName || '').toLowerCase();
+      const cat = (r.category || '').toLowerCase();
+      const reason = (r.reason || '').toLowerCase();
+      const branch = (r.branchName || '').toLowerCase();
+      const full = (r.branchFullPath || '').toLowerCase();
+      return name.includes(q) || cat.includes(q) || reason.includes(q) || branch.includes(q) || full.includes(q);
+    });
+  }
+  return list;
+}
 
   function renderFoodspots() {
     if (!foodspotsLoaded) return;
