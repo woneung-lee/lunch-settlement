@@ -673,23 +673,31 @@ confirmDeleteBtn.addEventListener('click', async () => {
     confirmDeleteBtn.textContent = '삭제 중...';
     
     try {
-        const batch = db.batch();
-        
-        // 서브컬렉션 삭제
-        const collectionsToDelete = ['members', 'restaurants', 'meals', 'groupMembers'];
-        
-        for (const collectionName of collectionsToDelete) {
-            const snapshot = await db.collection('groups').doc(groupId)
-                .collection(collectionName).get();
-            snapshot.forEach(doc => {
-                batch.delete(doc.ref);
-            });
-        }
-        
-        // 그룹 삭제
-        batch.delete(db.collection('groups').doc(groupId));
-        
-        await batch.commit();
+    const batch = db.batch();
+    
+    // 서브컬렉션 삭제
+    const collectionsToDelete = ['members', 'restaurants', 'meals', 'groupMembers'];
+    
+    for (const collectionName of collectionsToDelete) {
+        const snapshot = await db.collection('groups').doc(groupId)
+            .collection(collectionName).get();
+        snapshot.forEach(doc => {
+            batch.delete(doc.ref);
+        });
+    }
+    
+    // 🆕 공유 맛집 삭제 (sharedRestaurants 컬렉션에서)
+    const sharedRestaurantsSnapshot = await db.collection('sharedRestaurants')
+        .where('groupId', '==', groupId)
+        .get();
+    sharedRestaurantsSnapshot.forEach(doc => {
+        batch.delete(doc.ref);
+    });
+    
+    // 그룹 삭제
+    batch.delete(db.collection('groups').doc(groupId));
+    
+    await batch.commit();
         
         alert('그룹이 삭제되었습니다.');
         window.location.href = 'groups.html';
