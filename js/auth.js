@@ -8,6 +8,7 @@ const loginId = document.getElementById('login-id');
 const loginPassword = document.getElementById('login-password');
 const loginBtn = document.getElementById('login-btn');
 const loginError = document.getElementById('login-error');
+const autoLoginCheckbox = document.getElementById('auto-login');  // ✅ 추가!
 
 // 회원가입 요소
 const signupId = document.getElementById('signup-id');
@@ -154,8 +155,8 @@ signupBtn.addEventListener('click', async () => {
         await db.collection('users').doc(user.uid).set({
             userId: id,
             email: email,
-            createdAt: timestamp(),
-            updatedAt: timestamp()
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
         
         // 그룹 목록 페이지로 이동
@@ -196,6 +197,12 @@ loginBtn.addEventListener('click', async () => {
     loginBtn.textContent = '로그인 중...';
     
     try {
+        // ✅ 자동 로그인 설정
+        const persistence = autoLoginCheckbox.checked 
+            ? firebase.auth.Auth.Persistence.LOCAL    // 체크 O: 브라우저 닫아도 로그인 유지
+            : firebase.auth.Auth.Persistence.SESSION; // 체크 X: 탭 닫으면 로그아웃
+        
+        await auth.setPersistence(persistence);
         await auth.signInWithEmailAndPassword(email, password);
         
         // 그룹 목록 페이지로 이동
