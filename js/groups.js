@@ -252,34 +252,51 @@
   /* =========================
      맛집 로드/필터/렌더
   ========================= */
-  async function ensureFoodspotsLoaded() {
-    if (foodspotsLoaded) {
-      populateFoodspotsTop2Options();
-      renderFoodspots();
-      return;
-    }
-
-    try {
-      showFoodspotsLoading();
-
-      const snap = await db.collection('sharedRestaurants')
-        .orderBy('sharedAt', 'desc')
-        .limit(500)
-        .get();
-
-      sharedRestaurantsAll = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-
-      populateFoodspotsTop1Options();
-      populateFoodspotsTop2Options();
-
-      foodspotsLoaded = true;
-      renderFoodspots();
-    } catch (e) {
-      console.error('맛집 목록 로드 오류:', e);
-      alert('맛집 목록을 불러오는 중 오류가 발생했습니다.');
-      showFoodspotsEmpty();
-    }
+ async function ensureFoodspotsLoaded() {
+  if (foodspotsLoaded) {
+    populateFoodspotsTop2Options();
+    renderFoodspots();
+    return;
   }
+
+  try {
+    showFoodspotsLoading();
+
+    const snap = await db.collection('sharedRestaurants')
+      .orderBy('sharedAt', 'desc')
+      .limit(500)
+      .get();
+
+    // ✅ 이 부분을 추가! (기존 한 줄 삭제하고 아래 코드로 교체)
+    const allDocs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    
+    // restaurantId + groupId 조합으로 중복 제거 (최신 것만 유지)
+    const uniqueMap = new Map();
+    allDocs.forEach(doc => {
+      const key = `${doc.restaurantId}_${doc.groupId}`;
+      const existing = uniqueMap.get(key);
+      
+      // 같은 조합이 없거나, 더 최신 데이터면 업데이트
+      if (!existing || (doc.sharedAt && existing.sharedAt && 
+          doc.sharedAt.toMillis() > existing.sharedAt.toMillis())) {
+        uniqueMap.set(key, doc);
+      }
+    });
+    
+    // Map에서 배열로 변환
+    sharedRestaurantsAll = Array.from(uniqueMap.values());
+
+    populateFoodspotsTop1Options();
+    populateFoodspotsTop2Options();
+
+    foodspotsLoaded = true;
+    renderFoodspots();
+  } catch (e) {
+    console.error('맛집 목록 로드 오류:', e);
+    alert('맛집 목록을 불러오는 중 오류가 발생했습니다.');
+    showFoodspotsEmpty();
+  }
+}
 
   function populateFoodspotsTop1Options() {
     if (!foodspotsTop1Select) return;
