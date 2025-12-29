@@ -340,8 +340,6 @@ async function transferOwnerTo(newOwnerUid) {
         alert('방장 위임이 완료되었습니다.');
         // 내 역할 갱신
         myRole = 'member';
-        renderSettings();
-        await loadTransferOwnerCandidates();
         await loadTransferOwnerCandidates();
     } catch (e) {
         console.error('방장 위임 오류:', e);
