@@ -861,10 +861,13 @@ function addOrderItem(orderData = null) {
         </div>
     `;
     
-    ordersList.appendChild(orderItem);
+        ordersList.appendChild(orderItem);
     
     // 금액 입력 시 합계 업데이트
     bindAmountInput(orderItem.querySelector('.order-amount'));
+    
+    // 이름 선택 UI 초기화(등록 그룹원 vs 게스트)
+    initOrderMemberUI(orderCounter, orderData?.memberName || '');
     
     return orderItem;
 }
