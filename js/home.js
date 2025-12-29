@@ -851,7 +851,7 @@ function addOrderItem(orderData = null) {
             <div class="field-row">
 <div class="form-group">
     <label>메뉴 (선택)</label>
-    <input type="text" class="shared-menu" placeholder="메뉴명 (선택사항)" value="${sharedData?.menu || ''}">
+<input type="text" class="order-menu" placeholder="메뉴명 (선택사항)" value="${orderData?.menu || ''}">
 </div>
                 <div class="form-group">
                     <label>금액</label>
@@ -1126,5 +1126,3 @@ deleteMealBtn.addEventListener('click', async () => {
         deleteMealBtn.textContent = '삭제';
     }
 });
-    // 이름 선택 UI 초기화(등록 그룹원 vs 게스트)
-    initOrderMemberUI(orderCounter, orderData?.memberName || '');
