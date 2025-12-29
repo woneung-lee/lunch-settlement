@@ -703,3 +703,201 @@
     white-space:pre-line;
 }
 
+/* ===== Foodspots UI ===== */
+.foodspots-header {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 14px;
+  margin: 12px 0;
+}
+
+.foodspots-title-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.foodspots-title {
+  font-weight: 800;
+  font-size: 18px;
+  letter-spacing: -0.2px;
+}
+
+.foodspots-count {
+  font-size: 13px;
+  color: #6b7280;
+  background: #f3f4f6;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+.foodspots-controls {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.foodspots-search input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  outline: none;
+  font-size: 14px;
+}
+
+.foodspots-search input:focus {
+  border-color: #cbd5e1;
+  box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.25);
+}
+
+.foodspots-sort {
+  padding: 10px 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  font-size: 14px;
+}
+
+.foodspots-view-toggle {
+  display: inline-flex;
+  gap: 6px;
+  background: #f3f4f6;
+  padding: 6px;
+  border-radius: 12px;
+}
+
+.view-btn {
+  border: 0;
+  background: transparent;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 13px;
+  cursor: pointer;
+  color: #374151;
+}
+
+.view-btn.active {
+  background: #fff;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.04);
+  font-weight: 700;
+}
+
+/* grid/list containers */
+.foodspots-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 10px;
+}
+
+@media (max-width: 820px) {
+  .foodspots-controls {
+    grid-template-columns: 1fr 1fr;
+  }
+  .foodspots-view-toggle {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+  .foodspots-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.foodspots-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+/* card */
+.foodspot-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 14px;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.foodspot-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+}
+
+.foodspot-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.foodspot-name {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+}
+
+.foodspot-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.badge {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  color: #374151;
+  white-space: nowrap;
+}
+
+.badge-branch {
+  background: #eef2ff;
+  border-color: #e0e7ff;
+  color: #3730a3;
+}
+
+.badge-category {
+  background: #ecfeff;
+  border-color: #cffafe;
+  color: #155e75;
+}
+
+.foodspot-note {
+  margin-top: 10px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #374151;
+  background: #f9fafb;
+  border: 1px dashed #e5e7eb;
+  padding: 10px;
+  border-radius: 12px;
+}
+
+.foodspot-footer {
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.foodspots-state {
+  margin: 12px 0;
+  padding: 14px;
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  color: #6b7280;
+  font-size: 14px;
+}
+
