@@ -434,6 +434,7 @@ saveRestaurantBtn.addEventListener('click', async () => {
             
             // 공유 처리
             if (isShared) {
+                    await unshareRestaurant(editingRestaurantId);
                 await shareRestaurant(docRef.id, name, category, shareReason);
             }
         }
