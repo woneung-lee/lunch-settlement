@@ -579,3 +579,159 @@
         padding: 16px;
     }
 }
+
+/* ===== 멤버 관리 카드 스타일 ===== */
+.management-card {
+    background: linear-gradient(135deg, #F8F9FA 0%, #FFFFFF 100%);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    margin-top: 16px;
+    transition: all 0.3s ease;
+}
+
+.management-card:hover {
+    border-color: var(--primary-light);
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.1);
+}
+
+.management-card:first-of-type {
+    margin-top: 20px;
+}
+
+.card-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.card-title::before {
+    content: '▸';
+    color: var(--primary);
+    font-size: 18px;
+}
+
+.card-description {
+    font-size: 13px;
+    color: var(--text-medium);
+    line-height: 1.5;
+    margin-bottom: 16px;
+    padding: 10px;
+    background: #FFF9E6;
+    border-left: 3px solid #FFA500;
+    border-radius: var(--radius-sm);
+}
+
+/* 카드 액션 버튼 영역 */
+.card-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.btn-card-primary,
+.btn-card-secondary {
+    flex: 1;
+    min-width: 140px;
+    padding: 12px 20px;
+    border: 2px solid var(--primary);
+    border-radius: var(--radius-md);
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-card-primary {
+    background: var(--primary);
+    color: white;
+}
+
+.btn-card-primary:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+}
+
+.btn-card-primary:active {
+    transform: translateY(0);
+}
+
+.btn-card-secondary {
+    background: white;
+    color: var(--primary);
+}
+
+.btn-card-secondary:hover {
+    background: var(--bg-main);
+    border-color: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.15);
+}
+
+.btn-card-secondary:active {
+    transform: translateY(0);
+}
+
+.btn-icon {
+    font-size: 16px;
+}
+
+/* 방장 위임 컨트롤 */
+.transfer-control {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.transfer-select {
+    flex: 1;
+    min-width: 180px;
+    padding: 12px 16px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-md);
+    font-size: 15px;
+    color: var(--text-dark);
+    background: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.transfer-select:hover {
+    border-color: var(--primary-light);
+}
+
+.transfer-select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+}
+
+.transfer-select:disabled {
+    background: var(--bg-main);
+    color: var(--text-medium);
+    cursor: not-allowed;
+}
+
+/* 반응형 */
+@media (max-width: 480px) {
+    .card-actions,
+    .transfer-control {
+        flex-direction: column;
+    }
+    
+    .btn-card-primary,
+    .btn-card-secondary,
+    .transfer-select {
+        width: 100%;
+        min-width: 100%;
+    }
+}
