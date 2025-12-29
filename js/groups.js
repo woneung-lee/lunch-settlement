@@ -1,4 +1,3 @@
-@@ -1,387 +1,12 @@
 // ===== DOM 요소 =====
 const logoutBtn = document.getElementById('logout-btn');
 const fabBtn = document.getElementById('fab-btn');
